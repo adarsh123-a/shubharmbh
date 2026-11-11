@@ -1,0 +1,196 @@
+================================================================================
+SHUBHARAMBH REALTY — BACKEND ROLE & PERMISSION SPECIFICATION MATRIX
+================================================================================
+Generated: 2026-11-01
+Architecture: Node.js + Express + MongoDB (Mongoose) + JWT (HttpOnly Cookie)
+Supported Roles: super_admin, admin, rm, agent, customer
+
+================================================================================
+1. ROLE HIERARCHY & CORE RESPONSIBILITIES
+================================================================================
+
+1.1 SUPER ADMIN (`super_admin`)
+--------------------------------------------------------------------------------
+- Description: Executive owner and supreme administrator of the platform.
+- Scope: Platform-wide full control with unrestricted access.
+- Key Permissions:
+  * CREATE / READ / UPDATE / DELETE any user (Admins, RMs, Agents, Customers).
+  * Activate, deactivate, or suspend any user account.
+  * View overall organizational financials, commissions, sales volume, and revenue.
+  * Access system audit logs and security logs.
+  * Configure environment settings, payment gateways, and third-party integrations.
+  * Approve or override any property, lead, or booking status.
+- Backend Middleware:
+  authorizeRoles('super_admin')
+
+
+1.2 ADMIN (`admin`)
+--------------------------------------------------------------------------------
+- Description: Real estate operations and team manager.
+- Scope: Day-to-day property governance, staff oversight, and enquiry routing.
+- Key Permissions:
+  * Manage staff: Supervise RMs and Agents; approve pending Agent accounts.
+  * Property Governance: Review submitted properties; publish, edit, feature, or archive listings.
+  * Lead Allocation: Assign incoming customer inquiries/leads to specific RMs.
+  * Reports: Access property performance analytics, site visit logs, and team conversion metrics.
+- Restrictions:
+  * CANNOT create, modify, deactivate, or delete Super Admin accounts.
+  * CANNOT access core platform secrets, environment configs, or owner-level payout credentials.
+- Backend Middleware:
+  authorizeRoles('super_admin', 'admin')
+
+
+1.3 RELATIONSHIP MANAGER (`rm`)
+--------------------------------------------------------------------------------
+- Description: Dedicated field/sales manager handling customer journeys and site visits.
+- Scope: Assigned customer leads, schedules, and property walkthroughs.
+- Key Permissions:
+  * View and manage assigned leads (Enquiries assigned by Admin/Super Admin).
+  * Update lead lifecycle states: New -> Contacted -> Visit Scheduled -> Negotiation -> Booked -> Lost.
+  * Schedule, reschedule, and log outcomes of site visits (physical & virtual).
+  * Add internal customer notes, follow-up reminders, and call logs.
+  * Browse all approved properties to recommend them to prospective clients.
+- Restrictions:
+  * CANNOT access leads assigned to other RMs (strictly scoped to assignedRM === req.user._id).
+  * CANNOT approve, publish, or modify master property listing information.
+  * CANNOT view company revenue, payroll, or overall commission books.
+- Backend Middleware:
+  authorizeRoles('super_admin', 'admin', 'rm')
+
+
+1.4 AGENT / CHANNEL PARTNER (`agent`)
+--------------------------------------------------------------------------------
+- Description: External real estate broker or sales partner.
+- Scope: Direct property submissions, client referrals, and commission tracking.
+- Key Permissions:
+  * Submit new property listings for Admin verification and approval.
+  * View and track status of own submitted properties (Draft, Under Review, Approved, Rejected, Sold).
+  * Submit direct client leads and register buyer inquiries.
+  * Track own closed deals, earned commissions, and payout disbursement status.
+  * Download approved property brochures, high-res floor plans, and marketing kits.
+- Restrictions:
+  * CANNOT view other agents' clients, listings, or commission percentages.
+  * Submitted properties remain hidden from public search until approved by Admin.
+  * CANNOT allocate leads to staff or access customer contact details outside own referrals.
+- Backend Middleware:
+  authorizeRoles('super_admin', 'admin', 'agent')
+
+
+1.5 CUSTOMER (`customer`)
+--------------------------------------------------------------------------------
+- Description: End consumer (property buyer, investor, or tenant).
+- Scope: Property discovery, inquiries, site visit requests, and booking history.
+- Key Permissions:
+  * Search, filter, and view all publicly published properties and project amenities.
+  * Maintain personal wishlist / saved properties list.
+  * Submit property inquiries, request callbacks, and book site visits.
+  * View personal enquiry status, scheduled site visits, and booking documents.
+  * Update personal profile (Name, phone, email, password, notification preferences).
+- Restrictions:
+  * Strictly isolated to own user ID (`req.user._id === resource.customerId`).
+  * CANNOT view internal RM notes, agent commissions, or unpublished/pending properties.
+  * Zero access to any staff, administrative, or operational endpoints.
+- Backend Middleware:
+  authorizeRoles('customer') [plus resource ownership check]
+
+
+================================================================================
+2. RESOURCE CRUD PERMISSIONS MATRIX
+================================================================================
+
+Legend:
+  C = Create
+  R = Read (All)
+  Ro = Read (Own records only)
+  U = Update (All)
+  Uo = Update (Own records only)
+  D = Delete (All)
+  Do = Delete (Own records only)
+  - = No Access
+
+Resource              | super_admin | admin       | rm          | agent       | customer
+----------------------+-------------+-------------+-------------+-------------+----------
+User: Super Admin     | C, R, U, D  | -           | -           | -           | -
+User: Admin           | C, R, U, D  | Ro          | -           | -           | -
+User: RM              | C, R, U, D  | C, R, U, D  | Ro, Uo      | -           | -
+User: Agent           | C, R, U, D  | C, R, U, D  | R           | Ro, Uo      | -
+User: Customer        | C, R, U, D  | C, R, U     | R (Assigned)| Ro (Referral)| Ro, Uo
+----------------------+-------------+-------------+-------------+-------------+----------
+Properties (Public)   | C, R, U, D  | C, R, U, D  | R           | R           | R
+Properties (Pending)  | R, U, D     | R, U, D     | -           | Ro, Uo, Do  | -
+Property Submission   | C           | C           | -           | C           | -
+----------------------+-------------+-------------+-------------+-------------+----------
+Enquiries / Leads     | C, R, U, D  | C, R, U, D  | Ro, Uo      | Ro, C       | C, Ro
+Lead Allocation       | C, U        | C, U        | -           | -           | -
+----------------------+-------------+-------------+-------------+-------------+----------
+Site Visits           | C, R, U, D  | C, R, U, D  | C, Ro, Uo   | -           | C, Ro
+Visit Notes & Logs    | C, R, U, D  | C, R, U, D  | C, Ro, Uo   | -           | -
+----------------------+-------------+-------------+-------------+-------------+----------
+Bookings / Sales      | C, R, U, D  | C, R, U, D  | Ro          | Ro (Own)    | Ro (Own)
+Commissions / Revenue | C, R, U, D  | R (Limited) | -           | Ro (Own)    | -
+Audit & System Logs   | R           | -           | -           | -           | -
+System Configuration  | C, R, U, D  | -           | -           | -           | -
+
+
+================================================================================
+3. BACKEND IMPLEMENTATION PATTERNS
+================================================================================
+
+3.1 Strict Role Gate Pattern:
+--------------------------------------------------------------------------------
+import { protect } from '../middleware/authMiddleware.js';
+import { authorizeRoles } from '../middleware/roleMiddleware.js';
+
+// Super Admin Only:
+router.get('/admin/financial-audit', protect, authorizeRoles('super_admin'), getAudit);
+
+// Admin & Super Admin:
+router.patch('/properties/:id/publish', protect, authorizeRoles('super_admin', 'admin'), publishProperty);
+
+// RM Pipeline:
+router.patch('/leads/:id/status', protect, authorizeRoles('super_admin', 'admin', 'rm'), updateLeadStatus);
+
+// Agent Submissions:
+router.post('/agent/properties', protect, authorizeRoles('agent'), submitProperty);
+
+// Customer Bookings:
+router.post('/customer/site-visit', protect, authorizeRoles('customer'), bookSiteVisit);
+
+
+3.2 Resource Ownership Gate Pattern (Zero-Trust):
+--------------------------------------------------------------------------------
+// Example: RM can only update their assigned lead
+export const updateLead = async (req, res, next) => {
+  const lead = await Lead.findById(req.params.id);
+  if (!lead) return res.status(404).json({ success: false, message: 'Lead not found' });
+
+  // Super Admin and Admin have universal access; RM only if assigned
+  if (req.user.role === 'rm' && lead.assignedRM?.toString() !== req.user._id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: You are not assigned to this lead.'
+    });
+  }
+
+  // Customer only if they own the enquiry
+  if (req.user.role === 'customer' && lead.customerId?.toString() !== req.user._id.toString()) {
+    return res.status(403).json({
+      success: false,
+      message: 'Forbidden: Access denied to other users data.'
+    });
+  }
+
+  // Proceed with update
+};
+
+
+================================================================================
+4. SECURITY ENFORCEMENT RULES
+================================================================================
+1. Zero UI Reliance: Hiding an edit button on the frontend is NOT security. Every backend route checks JWT + Role + Resource Ownership.
+2. HttpOnly Cookies: JWTs are stored in HttpOnly, SameSite=Strict cookies to eliminate XSS token theft.
+3. Elevated Role Provisioning: Public register cannot create super_admin, admin, or rm accounts. Only an authenticated super_admin can provision administrative staff.
+4. Parameterized Queries: All MongoDB queries use Mongoose methods to prevent NoSQL injection.
+5. Generic Error Messages: Login authentication errors return "Invalid credentials." without revealing whether the email or password was wrong.
+================================================================================
+
