@@ -1,4 +1,4 @@
-const API_URL = import.meta.env?.VITE_API_URL || 'http://localhost:5000/api/auth';
+const API_URL = import.meta.env?.VITE_API_URL || 'https://shubharmbh.onrender.com/api/auth';
 
 export const authService = {
   async register(data) {

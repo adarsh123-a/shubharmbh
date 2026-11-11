@@ -1,4 +1,5 @@
 import React from 'react';
+import { authService } from '../../login/services/authService.js';
 
 export default function CustomerProfileView({
   wishlistCount = 3,
@@ -6,17 +7,14 @@ export default function CustomerProfileView({
 }) {
   const handleLogout = async () => {
     try {
-      await fetch('http://localhost:5000/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      await authService.logout();
     } catch {
       // Ignore network errors on logout
     }
     // Clear cookies & reload to login
     document.cookie = 'token=; Max-Age=0; path=/;';
     document.cookie = 'user_role=; Max-Age=0; path=/;';
-    window.location.href = '../login/index.html';
+    window.location.href = '/login';
   };
 
   return (
