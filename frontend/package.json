@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "npm --prefix customer run dev",
-    "build": "npm --prefix customer install && npm --prefix customer run build",
+    "build": "cd customer && npm install && npm run build",
     "preview": "npm --prefix customer run preview"
   }
 }
