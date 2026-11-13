@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/eformx-api/:path*",
+      "destination": "https://api.eformx.in/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/"
     }

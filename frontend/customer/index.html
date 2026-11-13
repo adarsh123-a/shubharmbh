@@ -3,7 +3,7 @@
 <head>
   <script>
     window.__HOME_API_DATA__ = null;
-    window.__HOME_API_PROMISE__ = fetch('https://api.eformx.in/?api=property/v1/home/home&_t=' + Date.now(), { cache: 'no-store' })
+    window.__HOME_API_PROMISE__ = fetch('/eformx-api/?api=property/v1/home/home&_t=' + Date.now(), { cache: 'no-store' })
       .then(function(res) { return res.json(); })
       .then(function(json) {
         window.__HOME_API_DATA__ = json;

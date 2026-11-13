@@ -42,7 +42,7 @@ export default function PropertySection({
     // If forceFresh requested, bypass cache and fetch directly
     if (forceFresh) {
       window.__HOME_API_DATA__ = null;
-      fetch(`https://api.eformx.in/?api=property/v1/home/home&_t=${Date.now()}`, { cache: 'no-store' })
+      fetch(`/eformx-api/?api=property/v1/home/home&_t=${Date.now()}`, { cache: 'no-store' })
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
           return res.json();
@@ -61,7 +61,7 @@ export default function PropertySection({
     } else if (window.__HOME_API_PROMISE__) {
       window.__HOME_API_PROMISE__.then(handleSuccess).catch(handleError);
     } else {
-      fetch(`https://api.eformx.in/?api=property/v1/home/home&_t=${Date.now()}`, { cache: 'no-store' })
+      fetch(`/eformx-api/?api=property/v1/home/home&_t=${Date.now()}`, { cache: 'no-store' })
         .then((res) => {
           if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
           return res.json();

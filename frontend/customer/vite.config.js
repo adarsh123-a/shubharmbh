@@ -11,5 +11,12 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+    proxy: {
+      '/eformx-api': {
+        target: 'https://api.eformx.in',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/eformx-api/, ''),
+      },
+    },
   },
 });

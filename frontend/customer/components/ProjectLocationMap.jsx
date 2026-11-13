@@ -15,7 +15,7 @@ export default function ProjectLocationMap({ selectedProject }) {
     } else if (window.__HOME_API_PROMISE__) {
       window.__HOME_API_PROMISE__.then(handleData).catch(() => {});
     } else {
-      fetch('https://api.eformx.in/?api=property/v1/home/home')
+      fetch('/eformx-api/?api=property/v1/home/home')
         .then((res) => res.json())
         .then(handleData)
         .catch((err) => console.error('Map location fetch error:', err));
