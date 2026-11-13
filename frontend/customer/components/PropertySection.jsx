@@ -18,70 +18,38 @@ export default function PropertySection({
     if (onSelectProject) onSelectProject(val);
   };
 
-  // Fetch API function with retry (supports forceFresh for live data)
-  const fetchPropertyData = useCallback((forceFresh = false) => {
+  // Fetch API function with retry
+  const fetchPropertyData = useCallback(() => {
     setIsLoading(true);
     setShowErrorPopup(false);
 
-    const handleSuccess = (json) => {
-      setIsLoading(false);
-      if (json && json.status && Array.isArray(json.data) && json.data.length > 0) {
-        setApiProjects(json.data);
-      } else {
-        setErrorMessage(json?.message || 'सर्वर से कोई प्रोजेक्ट डेटा प्राप्त नहीं हुआ।');
+    fetch(`/api/properties/home?_t=${Date.now()}`, { cache: 'no-store' })
+      .then((res) => {
+        const ct = res.headers.get('content-type');
+        if (ct && !ct.includes('application/json')) {
+          throw new Error('API server ne JSON ki jagah invalid response bhej diya hai.');
+        }
+        if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+        return res.json();
+      })
+      .then((json) => {
+        setIsLoading(false);
+        if (json && json.status && Array.isArray(json.data) && json.data.length > 0) {
+          setApiProjects(json.data);
+        } else {
+          setErrorMessage(json?.message || 'सर्वर से कोई प्रोजेक्ट डेटा प्राप्त नहीं हुआ।');
+          setShowErrorPopup(true);
+        }
+      })
+      .catch((err) => {
+        setIsLoading(false);
+        setErrorMessage(err?.message || 'नेटवर्क समस्या: सर्वर से कनेक्ट नहीं हो सका।');
         setShowErrorPopup(true);
-      }
-    };
-
-    const handleError = (err) => {
-      setIsLoading(false);
-      setErrorMessage(err?.message || 'नेटवर्क समस्या: सर्वर से कनेक्ट नहीं हो सका।');
-      setShowErrorPopup(true);
-    };
-
-    // If forceFresh requested, bypass cache and fetch directly
-    if (forceFresh) {
-      window.__HOME_API_DATA__ = null;
-      fetch(`/eformx-api/?api=property/v1/home/home&_t=${Date.now()}`, { cache: 'no-store' })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-          return res.json();
-        })
-        .then((json) => {
-          window.__HOME_API_DATA__ = json;
-          handleSuccess(json);
-        })
-        .catch(handleError);
-      return;
-    }
-
-    // Check pre-fetched data from index.html first
-    if (window.__HOME_API_DATA__) {
-      handleSuccess(window.__HOME_API_DATA__);
-    } else if (window.__HOME_API_PROMISE__) {
-      window.__HOME_API_PROMISE__.then(handleSuccess).catch(handleError);
-    } else {
-      fetch(`/eformx-api/?api=property/v1/home/home&_t=${Date.now()}`, { cache: 'no-store' })
-        .then((res) => {
-          if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
-          return res.json();
-        })
-        .then(handleSuccess)
-        .catch(handleError);
-    }
+      });
   }, []);
 
   useEffect(() => {
     fetchPropertyData();
-
-    const onLoaded = (e) => {
-      if (e.detail && e.detail.status) {
-        setApiProjects(e.detail.data || []);
-        setIsLoading(false);
-      }
-    };
-    window.addEventListener('homeApiLoaded', onLoaded);
-    return () => window.removeEventListener('homeApiLoaded', onLoaded);
   }, [fetchPropertyData]);
 
   // Compute active plots list strictly for selected project

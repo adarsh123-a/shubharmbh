@@ -1,26 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script>
-    window.__HOME_API_DATA__ = null;
-    window.__HOME_API_PROMISE__ = fetch('/eformx-api/?api=property/v1/home/home&_t=' + Date.now(), { cache: 'no-store' })
-      .then(function(res) { return res.json(); })
-      .then(function(json) {
-        window.__HOME_API_DATA__ = json;
-        window.dispatchEvent(new CustomEvent('homeApiLoaded', { detail: json }));
-        return json;
-      })
-      .catch(function(err) {
-        console.error('Home API Fetch Error:', err);
-      });
-    // protecion ke liye <?php json_encode($json);?>
-  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Shubharambh Realty — Customer Portal</title>
   <meta name="description" content="Discover luxury real estate, apartments, villas, and verified plots with Shubharambh Realty." />
   <link rel="icon" type="image/png" href="/assets/logo-BCyjl_EG.png" />
-  <script type="module" crossorigin src="/assets/index-MND55VzP.js"></script>
+  <script type="module" crossorigin src="/assets/index-D1tAuKJl.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/index-DZi4nhBu.css">
 </head>
 <body>

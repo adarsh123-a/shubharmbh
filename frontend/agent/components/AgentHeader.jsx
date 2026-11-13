@@ -1,4 +1,5 @@
 import React from 'react';
+import logoImg from '../../customer/assets/logo.png';
 
 export default function AgentHeader({ onMenuClick, onNotificationClick, onProfileClick }) {
   return (
@@ -18,11 +19,11 @@ export default function AgentHeader({ onMenuClick, onNotificationClick, onProfil
         </button>
 
         <img
-          src="./assets/logo.png"
+          src={logoImg}
           alt="Shubharambh Realty"
           className="agent-brand-logo"
           onError={(e) => {
-            e.currentTarget.src = '../docs/logo.png';
+            e.currentTarget.onerror = null;
           }}
         />
       </div>

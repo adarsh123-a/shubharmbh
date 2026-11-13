@@ -4,30 +4,18 @@ export default function ProjectLocationMap({ selectedProject }) {
   const [projects, setProjects] = useState([]);
 
   useEffect(() => {
-    const handleData = (json) => {
-      if (json && json.status && Array.isArray(json.data) && json.data.length > 0) {
-        setProjects(json.data);
-      }
-    };
-
-    if (window.__HOME_API_DATA__) {
-      handleData(window.__HOME_API_DATA__);
-    } else if (window.__HOME_API_PROMISE__) {
-      window.__HOME_API_PROMISE__.then(handleData).catch(() => {});
-    } else {
-      fetch('/eformx-api/?api=property/v1/home/home')
-        .then((res) => res.json())
-        .then(handleData)
-        .catch((err) => console.error('Map location fetch error:', err));
-    }
-
-    const onLoaded = (e) => {
-      if (e.detail && e.detail.status) {
-        handleData(e.detail);
-      }
-    };
-    window.addEventListener('homeApiLoaded', onLoaded);
-    return () => window.removeEventListener('homeApiLoaded', onLoaded);
+    fetch('/api/properties/home')
+      .then((res) => {
+        const ct = res.headers.get('content-type');
+        if (ct && !ct.includes('application/json')) return null;
+        return res.json();
+      })
+      .then((json) => {
+        if (json && json.status && Array.isArray(json.data) && json.data.length > 0) {
+          setProjects(json.data);
+        }
+      })
+      .catch((err) => console.error('Map location fetch error:', err));
   }, []);
 
   // Find strictly the matching project for selectedProject

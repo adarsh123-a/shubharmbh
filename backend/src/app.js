@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/authRoutes.js';
+import propertyRoutes from './routes/propertyRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
 const app = express();
@@ -63,6 +64,7 @@ app.get('/api/health', (req, res) => {
 
 // Mount Routes
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/api/properties', propertyRoutes);
 
 // 404 Route Catch-all
 app.use('*', (req, res) => {

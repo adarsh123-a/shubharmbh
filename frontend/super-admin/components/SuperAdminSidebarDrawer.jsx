@@ -1,4 +1,5 @@
 import React from 'react';
+import logoImg from '../../customer/assets/logo.png';
 
 const SA_DRAWER_NAV = [
   { id: 'dashboard', label: 'Executive Dashboard', icon: '📊' },
@@ -30,11 +31,11 @@ export default function SuperAdminSidebarDrawer({ isOpen, onClose, activeRoute, 
         <div className="sa-drawer-header">
           <div className="sa-drawer-brand">
             <img
-              src="./assets/logo.png"
+              src={logoImg}
               alt="Shubharambh Realty"
               className="sa-drawer-logo"
               onError={(e) => {
-                e.currentTarget.src = '../docs/logo.png';
+                e.currentTarget.onerror = null;
               }}
             />
             <span className="sa-drawer-badge">Super Admin</span>

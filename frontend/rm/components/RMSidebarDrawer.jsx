@@ -1,4 +1,5 @@
 import React from 'react';
+import logoImg from '../../customer/assets/logo.png';
 
 const RM_DRAWER_NAV = [
   { id: 'dashboard', label: 'RM Dashboard', icon: '📊' },
@@ -30,11 +31,11 @@ export default function RMSidebarDrawer({ isOpen, onClose, activeRoute, onNaviga
         <div className="rm-drawer-header">
           <div className="rm-drawer-brand">
             <img
-              src="./assets/logo.png"
+              src={logoImg}
               alt="Shubharambh Realty"
               className="rm-drawer-logo"
               onError={(e) => {
-                e.currentTarget.src = '../docs/logo.png';
+                e.currentTarget.onerror = null;
               }}
             />
             <span className="rm-drawer-badge">RM Desk</span>

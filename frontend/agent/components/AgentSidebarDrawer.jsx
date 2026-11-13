@@ -1,4 +1,5 @@
 import React from 'react';
+import logoImg from '../../customer/assets/logo.png';
 
 const AGENT_DRAWER_NAV = [
   { id: 'dashboard', label: 'Agent Dashboard', icon: '📊' },
@@ -22,11 +23,11 @@ export default function AgentSidebarDrawer({ isOpen, onClose, activeRoute, onNav
         <div className="agent-drawer-header">
           <div className="agent-drawer-brand">
             <img
-              src="./assets/logo.png"
+              src={logoImg}
               alt="Shubharambh Realty"
               className="agent-drawer-logo"
               onError={(e) => {
-                e.currentTarget.src = '../docs/logo.png';
+                e.currentTarget.onerror = null;
               }}
             />
             <span className="agent-drawer-badge">Agent Desk</span>
