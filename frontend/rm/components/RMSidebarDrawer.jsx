@@ -3,9 +3,10 @@ import logoImg from '../../customer/assets/logo.png';
 
 const RM_DRAWER_NAV = [
   { id: 'dashboard', label: 'RM Dashboard', icon: '📊' },
-  { id: 'enquiries', label: 'Client Enquiries (18)', icon: '💬' },
-  { id: 'customers', label: 'Customer Portfolio (12)', icon: '👥' },
-  { id: 'visits', label: 'Site Visits (6)', icon: '📍' },
+  { id: 'properties', label: 'Land Inventory & Plots', icon: '🏞️' },
+  { id: 'customers', label: 'Customer Portfolio', icon: '👥' },
+  { id: 'visits', label: 'Site Visits', icon: '📍' },
+  { id: 'enquiries', label: 'Client Enquiries', icon: '💬' },
   { id: 'more', label: 'Settings & Profile', icon: '⚙️' },
 ];
 

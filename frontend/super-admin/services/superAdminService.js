@@ -103,6 +103,29 @@ export const superAdminService = {
     return data.data;
   },
 
+  async updateProperty(landId, propertyData) {
+    const res = await fetch(`${API_BASE}/properties/${landId}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+      body: JSON.stringify(propertyData),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to update land scheme');
+    return data.data;
+  },
+
+  async deleteProperty(landId) {
+    const res = await fetch(`${API_BASE}/properties/${landId}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+      credentials: 'include',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Failed to delete land scheme');
+    return data.data;
+  },
+
   async getActivities() {
     try {
       const res = await fetch(`${API_BASE}/super-admin/activities`, {

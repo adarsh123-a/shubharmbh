@@ -5,19 +5,6 @@ export default function AgentHeader({ onMenuClick, onNotificationClick, onProfil
   return (
     <header className="agent-header gpu-accel">
       <div className="agent-header-left">
-        <button
-          type="button"
-          className="agent-icon-btn"
-          onClick={onMenuClick}
-          aria-label="Toggle Navigation Menu"
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1E293B" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="21" y2="12"></line>
-            <line x1="3" y1="18" x2="21" y2="18"></line>
-          </svg>
-        </button>
-
         <img
           src={logoImg}
           alt="Shubharambh Realty"
@@ -45,7 +32,7 @@ export default function AgentHeader({ onMenuClick, onNotificationClick, onProfil
         />
 
         <div className="agent-role-pill" onClick={onProfileClick}>
-          <span>RM</span>
+          <span>Agent</span>
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>

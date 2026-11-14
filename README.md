@@ -185,6 +185,8 @@ All protected endpoints accept authentication via **HTTP-only cookie (`token`)**
 - `GET /api/properties` — List all land schemes, coordinates, plot availability, rate per गज
 - `GET /api/properties/:id` — Fetch scheme details and plot layout grid
 - `POST /api/properties` — Create new land scheme (Admin / Super Admin only)
+- `PUT /api/properties/:landId` — Update land scheme details, rate, coordinates, or status (*Super-Admin only*)
+- `DELETE /api/properties/:landId` — Permanently delete land scheme from catalog (*Super-Admin only*)
 
 ---
 

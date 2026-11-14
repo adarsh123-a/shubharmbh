@@ -34,6 +34,8 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
     const payload = {
       land: landNum,
       side_name: title.trim(),
+      location: location.trim() || 'चकेरी, कानपुर',
+      price: price.trim() || '₹ 4,500 / गज',
       lat: latitude.trim() || '26.4095280',
       lng: longitude.trim() || '80.3894150',
       plots: [],

@@ -30,6 +30,14 @@ const propertySchema = new mongoose.Schema(
       required: [true, 'Project/Site name is required'],
       trim: true,
     },
+    location: {
+      type: String,
+      default: 'कानपुर / लखनऊ, उत्तर प्रदेश',
+    },
+    price: {
+      type: String,
+      default: '₹ 4,500 / गज Onwards',
+    },
     status: {
       type: String,
       default: 'true',

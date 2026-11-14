@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SuperAdminAddPropertyModal from './SuperAdminAddPropertyModal.jsx';
+import SuperAdminEditPropertyModal from './SuperAdminEditPropertyModal.jsx';
 import { superAdminService } from '../services/superAdminService.js';
 
 const SA_INVENTORY = [
@@ -70,6 +71,7 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null);
   const [notice, setNotice] = useState('');
 
   // Fetch live properties from backend
@@ -93,10 +95,10 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
             totalPlots,
             availablePlots,
             specs: `${totalPlots} Plots • 100 to 500 गज • Clear Title`,
-            price: '₹ 4,500 / गज Onwards',
-            status: item.status === 'true' || item.status === true ? 'For Sale' : 'Draft',
-            statusBg: '#DCFCE7',
-            statusColor: '#16A34A',
+            price: item.price || '₹ 4,500 / गज Onwards',
+            status: item.status === 'true' || item.status === true ? 'For Sale' : (item.status === 'sold' ? 'Sold' : 'Draft'),
+            statusBg: item.status === 'sold' ? '#DBEAFE' : (item.status === 'true' || item.status === true ? '#DCFCE7' : '#F1F5F9'),
+            statusColor: item.status === 'sold' ? '#2563EB' : (item.status === 'true' || item.status === true ? '#16A34A' : '#64748B'),
           };
         });
         setInventoryList(formatted);
@@ -118,6 +120,29 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
     setInventoryList((prev) => [newProp, ...prev]);
     setNotice(`Land project "${newProp.title}" listed successfully!`);
     setTimeout(() => setNotice(''), 4000);
+  };
+
+  const handleUpdateProperty = (updated) => {
+    setInventoryList((prev) => prev.map((p) => (p.landId === updated.landId ? updated : p)));
+    setNotice(`Land project "${updated.title}" updated successfully!`);
+    setTimeout(() => setNotice(''), 4000);
+  };
+
+  const handleDeleteProperty = async (landId, title) => {
+    if (!window.confirm(`Are you sure you want to permanently delete "${title}" (Land #${landId})?`)) {
+      return;
+    }
+    try {
+      await superAdminService.deleteProperty(landId);
+      setInventoryList((prev) => prev.filter((p) => p.landId !== String(landId)));
+      setNotice(`Land project "${title}" deleted successfully!`);
+      setTimeout(() => setNotice(''), 4000);
+    } catch (err) {
+      console.warn('Backend delete fallback:', err.message);
+      setInventoryList((prev) => prev.filter((p) => p.landId !== String(landId)));
+      setNotice(`Land project "${title}" removed locally.`);
+      setTimeout(() => setNotice(''), 4000);
+    }
   };
 
   return (
@@ -149,31 +174,44 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
         </div>
       )}
 
+      {/* Header with Title and Add Button */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
         <div>
-          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
-            Land & Plot Projects
+          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0, letterSpacing: '-0.02em' }}>
+            Land Schemes & Inventory
           </h2>
           <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-            {inventoryList.length + 124} Active Land Schemes
+            {inventoryList.length} Active Master Plots & Schemes
           </span>
         </div>
         <button
           type="button"
+          className="super-admin-btn-primary"
           onClick={() => setIsAddOpen(true)}
-          style={{
-            backgroundColor: '#D97706',
-            color: '#FFFFFF',
-            border: 'none',
-            borderRadius: '9999px',
-            padding: '6px 14px',
-            fontSize: '11.5px',
-            fontWeight: '700',
-            cursor: 'pointer',
-          }}
+          style={{ padding: '7px 14px', fontSize: '11.5px' }}
         >
-          + Add Land / Plot
+          <span>+ Add Scheme</span>
         </button>
+      </div>
+
+      {/* KPI Stats Strip */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '14px' }}>
+        <div style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', padding: '10px 12px', borderRadius: '12px' }}>
+          <span style={{ fontSize: '10px', color: '#64748B', fontWeight: '700', display: 'block' }}>TOTAL PROJECTS</span>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A' }}>{inventoryList.length}</span>
+        </div>
+        <div style={{ backgroundColor: '#F0FDF4', border: '1px solid #DCFCE7', padding: '10px 12px', borderRadius: '12px' }}>
+          <span style={{ fontSize: '10px', color: '#15803D', fontWeight: '700', display: 'block' }}>FOR SALE (LIVE)</span>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#15803D' }}>
+            {inventoryList.filter((p) => p.status === 'For Sale').length}
+          </span>
+        </div>
+        <div style={{ backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE', padding: '10px 12px', borderRadius: '12px' }}>
+          <span style={{ fontSize: '10px', color: '#1D4ED8', fontWeight: '700', display: 'block' }}>SOLD / BOOKED</span>
+          <span style={{ fontSize: '18px', fontWeight: '800', color: '#1D4ED8' }}>
+            {inventoryList.filter((p) => p.status === 'Sold').length}
+          </span>
+        </div>
       </div>
 
       {/* Search Input */}
@@ -182,12 +220,12 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search all Lucknow properties..."
+          placeholder="Search land project by title or location..."
           style={{
             width: '100%',
             boxSizing: 'border-box',
             backgroundColor: '#FFFFFF',
-            border: '1px solid #E2E8F0',
+            border: '1px solid #CBD5E1',
             borderRadius: '12px',
             padding: '9px 12px 9px 34px',
             fontSize: '12px',
@@ -210,23 +248,23 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
       </div>
 
       {/* Filter Tabs */}
-      <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', overflowX: 'auto', paddingBottom: '2px' }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '2px' }}>
         {[
-          { id: 'all', label: 'All (128)' },
-          { id: 'for sale', label: 'For Sale (68)' },
-          { id: 'sold', label: 'Sold (18)' },
-          { id: 'draft', label: 'Draft (30)' },
+          { id: 'all', label: `All Schemes (${inventoryList.length})` },
+          { id: 'for sale', label: `For Sale (${inventoryList.filter((p) => p.status === 'For Sale').length})` },
+          { id: 'sold', label: `Sold (${inventoryList.filter((p) => p.status === 'Sold').length})` },
+          { id: 'draft', label: 'Draft' },
         ].map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setFilter(tab.id)}
             style={{
-              padding: '5px 11px',
+              padding: '5px 12px',
               borderRadius: '9999px',
-              border: 'none',
+              border: filter === tab.id ? '1px solid #D97706' : '1px solid #CBD5E1',
               backgroundColor: filter === tab.id ? '#D97706' : '#FFFFFF',
-              color: filter === tab.id ? '#FFFFFF' : '#64748B',
+              color: filter === tab.id ? '#FFFFFF' : '#475569',
               fontSize: '10.5px',
               fontWeight: '700',
               cursor: 'pointer',
@@ -325,14 +363,70 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
                 Immediate Registry
               </span>
             </div>
+
+            {/* Super Admin Action Controls: Edit & Delete */}
+            <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '10px', marginTop: '2px' }}>
+              <button
+                type="button"
+                onClick={() => setEditingProperty(prop)}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#F8FAFC',
+                  color: '#0F172A',
+                  border: '1px solid #CBD5E1',
+                  borderRadius: '8px',
+                  padding: '7px 0',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>✏️ Edit Scheme</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDeleteProperty(prop.landId, prop.title)}
+                style={{
+                  flex: 1,
+                  backgroundColor: '#FEE2E2',
+                  color: '#DC2626',
+                  border: '1px solid #FCA5A5',
+                  borderRadius: '8px',
+                  padding: '7px 0',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>🗑️ Delete Scheme</span>
+              </button>
+            </div>
           </div>
         ))}
       </div>
 
+      {/* Add Scheme Modal */}
       <SuperAdminAddPropertyModal
         isOpen={isAddOpen}
         onClose={() => setIsAddOpen(false)}
         onAddProperty={handleAddProperty}
+      />
+
+      {/* Edit Scheme Modal */}
+      <SuperAdminEditPropertyModal
+        isOpen={!!editingProperty}
+        property={editingProperty}
+        onClose={() => setEditingProperty(null)}
+        onUpdateProperty={handleUpdateProperty}
       />
     </div>
   );

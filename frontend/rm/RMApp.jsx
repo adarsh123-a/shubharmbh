@@ -6,6 +6,7 @@ import RMDashboardView from './components/RMDashboardView.jsx';
 import RMEnquiriesView from './components/RMEnquiriesView.jsx';
 import RMCustomersView from './components/RMCustomersView.jsx';
 import RMVisitsView from './components/RMVisitsView.jsx';
+import RMPropertiesView from './components/RMPropertiesView.jsx';
 import RMMoreView from './components/RMMoreView.jsx';
 import RMSidebarDrawer from './components/RMSidebarDrawer.jsx';
 import RMNotificationDrawer from './components/RMNotificationDrawer.jsx';
@@ -70,6 +71,10 @@ export default function RMApp({ initialRoute = 'dashboard' }) {
 
         {activeRoute === 'customers' && (
           <RMCustomersView onNavigate={handleNavigate} />
+        )}
+
+        {activeRoute === 'properties' && (
+          <RMPropertiesView onNavigate={handleNavigate} />
         )}
 
         {activeRoute === 'visits' && (
