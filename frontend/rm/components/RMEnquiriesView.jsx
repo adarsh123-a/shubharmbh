@@ -1,13 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { rmService } from '../services/rmService.js';
 
-const RM_ALL_ENQUIRIES = [
+const INITIAL_ENQUIRIES = [
   {
     id: 'enq-1',
     initials: 'RS',
     avatarBg: '#0D9488',
     name: 'Rahul Sharma',
-    detail: '3 BHK in Gomti Nagar',
-    budget: '₹ 85 Lakh',
+    detail: 'एयरपोर्ट चकेरी साइट (Plot #14)',
+    budget: '₹ 15 - 20 Lakh (200 गज)',
     badgeText: 'New',
     badgeBg: '#DCFCE7',
     badgeColor: '#16A34A',
@@ -20,8 +21,8 @@ const RM_ALL_ENQUIRIES = [
     initials: 'PK',
     avatarBg: '#3B82F6',
     name: 'Preeti Kumar',
-    detail: 'Plot in Faizabad Road',
-    budget: '₹ 32 Lakh',
+    detail: 'अवध ग्रीन सिटी लैंड प्रोजेक्ट',
+    budget: '₹ 12 Lakh (150 गज)',
     badgeText: 'Interested',
     badgeBg: '#DBEAFE',
     badgeColor: '#2563EB',
@@ -34,8 +35,8 @@ const RM_ALL_ENQUIRIES = [
     initials: 'AM',
     avatarBg: '#64748B',
     name: 'Amit Mishra',
-    detail: 'Independent House',
-    budget: '₹ 95 Lakh',
+    detail: 'कानपुर रोड कमर्शियल प्लॉट्स',
+    budget: '₹ 25 Lakh (300 गज)',
     badgeText: 'Site Visit',
     badgeBg: '#FEF3C7',
     badgeColor: '#D97706',
@@ -48,8 +49,8 @@ const RM_ALL_ENQUIRIES = [
     initials: 'SG',
     avatarBg: '#94A3B8',
     name: 'Sneha Gupta',
-    detail: '2 BHK Apartment',
-    budget: '₹ 65 Lakh',
+    detail: 'गंगा बैराज फार्मलैंड व प्लॉट्स',
+    budget: '₹ 18 Lakh (250 गज)',
     badgeText: 'Follow Up',
     badgeBg: '#FFE4E6',
     badgeColor: '#E11D48',
@@ -57,40 +58,58 @@ const RM_ALL_ENQUIRIES = [
     phone: '+917275004901',
     category: 'follow_up',
   },
-  {
-    id: 'enq-5',
-    initials: 'VK',
-    avatarBg: '#8B5CF6',
-    name: 'Vikash Singh',
-    detail: '4 BHK Luxury Villa',
-    budget: '₹ 1.5 Cr',
-    badgeText: 'New',
-    badgeBg: '#DCFCE7',
-    badgeColor: '#16A34A',
-    time: '3 hours ago',
-    phone: '+917275004901',
-    category: 'new',
-  },
-  {
-    id: 'enq-6',
-    initials: 'NK',
-    avatarBg: '#EA580C',
-    name: 'Nitin Kapoor',
-    detail: 'Commercial Retail Shop',
-    budget: '₹ 55 Lakh',
-    badgeText: 'Interested',
-    badgeBg: '#DBEAFE',
-    badgeColor: '#2563EB',
-    time: '5 hours ago',
-    phone: '+917275004901',
-    category: 'interested',
-  },
 ];
 
 export default function RMEnquiriesView() {
+  const [enquiries, setEnquiries] = useState(INITIAL_ENQUIRIES);
   const [activeFilter, setActiveFilter] = useState('all');
 
-  const filtered = RM_ALL_ENQUIRIES.filter((item) => {
+  useEffect(() => {
+    let isMounted = true;
+    rmService.getLeads().then((data) => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        const mapped = data.map((l) => {
+          const initials = l.name ? l.name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase() : 'LE';
+          const catMap = {
+            new: 'new',
+            contacted: 'interested',
+            visit_scheduled: 'site_visit',
+            booked: 'follow_up',
+            lost: 'follow_up',
+          };
+          const badgeMap = {
+            new: { text: 'New', bg: '#DCFCE7', color: '#16A34A' },
+            contacted: { text: 'Contacted', bg: '#DBEAFE', color: '#2563EB' },
+            visit_scheduled: { text: 'Site Visit', bg: '#FEF3C7', color: '#D97706' },
+            booked: { text: 'Booked', bg: '#F3E8FF', color: '#9333EA' },
+            lost: { text: 'Lost', bg: '#FEE2E2', color: '#DC2626' },
+          };
+          const b = badgeMap[l.status] || badgeMap.new;
+
+          return {
+            id: l._id,
+            initials,
+            avatarBg: '#D97706',
+            name: l.name,
+            detail: l.interestedLand ? `Land Scheme #${l.interestedLand}` : (l.preferredLocation || 'Verified Plots'),
+            budget: l.budget ? `Budget: ${l.budget}` : 'Budget Discussion',
+            badgeText: b.text,
+            badgeBg: b.bg,
+            badgeColor: b.color,
+            time: new Date(l.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            phone: l.phone,
+            category: catMap[l.status] || 'new',
+          };
+        });
+        setEnquiries(mapped);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const filtered = enquiries.filter((item) => {
     if (activeFilter === 'all') return true;
     return item.category === activeFilter;
   });
@@ -99,35 +118,37 @@ export default function RMEnquiriesView() {
     <div className="rm-main-content rm-enquiries-view">
       <div style={{ marginBottom: '14px' }}>
         <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
-          My Enquiries
+          Agent Enquiries Pipeline
         </h2>
         <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-          Total 18 Active Client Leads
+          Total {enquiries.length} Active Client Leads
         </span>
       </div>
 
       {/* Filter Tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', overflowX: 'auto', paddingBottom: '2px' }}>
         {[
-          { id: 'all', label: 'All (18)' },
-          { id: 'new', label: 'New (6)' },
-          { id: 'interested', label: 'Interested (4)' },
-          { id: 'site_visit', label: 'Site Visit (3)' },
-          { id: 'follow_up', label: 'Follow Up (5)' },
+          { id: 'all', label: `All (${enquiries.length})` },
+          { id: 'new', label: 'New' },
+          { id: 'interested', label: 'Interested / Call' },
+          { id: 'site_visit', label: 'Site Visit' },
+          { id: 'follow_up', label: 'Follow Up' },
         ].map((tab) => {
           const isActive = activeFilter === tab.id;
           return (
             <button
               key={tab.id}
               type="button"
+              className={`rm-pressable ${isActive ? 'active' : ''}`}
               onClick={() => setActiveFilter(tab.id)}
               style={{
-                padding: '5px 12px',
-                borderRadius: '9999px',
-                border: 'none',
-                backgroundColor: isActive ? '#92400E' : '#F1F5F9',
+                backgroundColor: isActive ? '#0F172A' : '#FFFFFF',
                 color: isActive ? '#FFFFFF' : '#475569',
-                fontSize: '10.5px',
+                border: '1px solid',
+                borderColor: isActive ? '#0F172A' : '#E2E8F0',
+                borderRadius: '9999px',
+                padding: '6px 12px',
+                fontSize: '11px',
                 fontWeight: '700',
                 cursor: 'pointer',
                 whiteSpace: 'nowrap',
@@ -139,109 +160,103 @@ export default function RMEnquiriesView() {
         })}
       </div>
 
-      {/* Leads Feed */}
+      {/* Enquiries List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {filtered.map((enq) => (
+        {filtered.map((item) => (
           <div
-            key={enq.id}
+            key={item.id}
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '16px',
-              padding: '12px',
+              padding: '12px 14px',
               border: '1px solid #E2E8F0',
               boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div
                   style={{
                     width: '38px',
                     height: '38px',
                     borderRadius: '50%',
-                    backgroundColor: enq.avatarBg,
+                    backgroundColor: item.avatarBg,
                     color: '#FFFFFF',
-                    fontSize: '12px',
-                    fontWeight: '800',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    flexShrink: 0,
+                    fontWeight: '800',
+                    fontSize: '13px',
                   }}
                 >
-                  {enq.initials}
+                  {item.initials}
                 </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {enq.name}
-                  </div>
-                  <div style={{ fontSize: '10.5px', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {enq.detail}
-                  </div>
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+                    {item.name}
+                  </h4>
+                  <span style={{ fontSize: '10.5px', color: '#64748B' }}>
+                    {item.time}
+                  </span>
                 </div>
               </div>
 
               <span
                 style={{
-                  backgroundColor: enq.badgeBg,
-                  color: enq.badgeColor,
+                  backgroundColor: item.badgeBg,
+                  color: item.badgeColor,
                   fontSize: '10.5px',
                   fontWeight: '800',
                   padding: '3px 9px',
                   borderRadius: '9999px',
-                  flexShrink: 0,
                 }}
               >
-                {enq.badgeText}
+                {item.badgeText}
               </span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F1F5F9', paddingTop: '8px' }}>
-              <span style={{ fontSize: '10.5px', color: '#94A3B8' }}>
-                🕒 {enq.time} • Budget: {enq.budget}
-              </span>
+            <div style={{ fontSize: '11.5px', color: '#334155', fontWeight: '600', marginBottom: '3px' }}>
+              🏞️ {item.detail}
+            </div>
+            <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '10px' }}>
+              💰 {item.budget}
+            </div>
 
-              <div style={{ display: 'flex', gap: '6px' }}>
-                <a
-                  href={`tel:${enq.phone}`}
-                  style={{
-                    backgroundColor: '#DBEAFE',
-                    color: '#2563EB',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  📞 Call
-                </a>
-                <a
-                  href={`https://wa.me/917275004901?text=Hello%20${encodeURIComponent(enq.name)},%20regarding%20${encodeURIComponent(enq.detail)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{
-                    backgroundColor: '#DCFCE7',
-                    color: '#16A34A',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    textDecoration: 'none',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                  }}
-                >
-                  💬 WhatsApp
-                </a>
-              </div>
+            <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '8px' }}>
+              <a
+                href={`tel:${item.phone}`}
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  backgroundColor: '#EFF6FF',
+                  color: '#2563EB',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '7px 0',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                }}
+              >
+                📞 Call Client
+              </a>
+              <a
+                href={`https://wa.me/${item.phone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(item.name)},%20Relationship%20Manager%20here%20from%20Shubharambh%20Realty`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  flex: 1,
+                  textAlign: 'center',
+                  backgroundColor: '#DCFCE7',
+                  color: '#16A34A',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  padding: '7px 0',
+                  borderRadius: '8px',
+                  textDecoration: 'none',
+                }}
+              >
+                💬 WhatsApp
+              </a>
             </div>
           </div>
         ))}

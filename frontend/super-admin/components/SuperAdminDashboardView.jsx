@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { superAdminService } from '../services/superAdminService.js';
 
 const SA_KPIS = [
   {
@@ -23,8 +24,8 @@ const SA_KPIS = [
     trend: '↑ 18%',
     bgTint: '#DCFCE7',
     iconColor: '#16A34A',
-    route: 'enquiries',
-    hasChevron: true,
+    route: null,
+    hasChevron: false,
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
         <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"></path>
@@ -127,30 +128,55 @@ const SA_KPIS = [
 
 const RECENT_PROPERTIES_LIST = [
   {
-    id: 'prop-1',
-    title: '3 BHK Independent House',
-    location: 'Lucknow, Uttar Pradesh',
-    specs: '1600 sq.ft • 3 BHK • 3 Bath',
-    price: '₹ 85 Lakh',
+    id: 'land-10',
+    landId: '10',
+    title: 'एयरपोर्ट चकेरी साइट',
+    location: 'चकेरी, कानपुर, उत्तर प्रदेश',
+    specs: '48 Plots • 100-300 गज • Immediate Registry',
+    price: '₹ 4,500 / गज',
     status: 'For Sale',
     statusBg: '#DCFCE7',
     statusColor: '#16A34A',
-    img: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=300&q=80',
   },
   {
-    id: 'prop-2',
-    title: '2 BHK Apartment',
-    location: 'Gomti Nagar, Lucknow',
-    specs: '1200 sq.ft • 2 BHK • 2 Bath',
-    price: '₹ 65 Lakh',
+    id: 'land-11',
+    landId: '11',
+    title: 'अवध ग्रीन सिटी लैंड प्रोजेक्ट',
+    location: 'सुल्तानपुर रोड, लखनऊ',
+    specs: '65 Plots • 150-500 गज • Clear Title',
+    price: '₹ 5,200 / गज',
     status: 'For Sale',
     statusBg: '#DCFCE7',
     statusColor: '#16A34A',
-    img: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=300&q=80',
   },
 ];
 
 export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
+  const [dashboardData, setDashboardData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    superAdminService.getDashboard().then((data) => {
+      if (isMounted && data) {
+        setDashboardData(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const getKpiValue = (id, fallback) => {
+    if (!dashboardData) return fallback;
+    if (id === 'properties') return String(dashboardData.inventory?.totalLands ?? fallback);
+    if (id === 'admins') return String(dashboardData.users?.admin ?? fallback);
+    if (id === 'rms') return String(dashboardData.users?.rm ?? fallback);
+    if (id === 'agents') return String(dashboardData.users?.agent ?? fallback);
+    if (id === 'customers') return String(dashboardData.users?.customer ?? fallback);
+    if (id === 'enquiries') return String(dashboardData.inventory?.availablePlots ?? fallback);
+    return fallback;
+  };
+
   return (
     <div className="super-admin-main-content super-admin-dashboard-view">
       {/* 1. Super Admin Hero Banner */}
@@ -194,25 +220,28 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
               Super Admin Dashboard
             </h2>
             <p style={{ fontSize: '11px', margin: '3px 0 0', color: '#CBD5E1', fontWeight: '500' }}>
-              Complete control over your real estate business
+              Master Land & Plots Management Portal
             </p>
           </div>
         </div>
 
-        {/* 3D Villa House Rendering on the Right */}
+        {/* Land Management Badge on the Right */}
         <div style={{ zIndex: 2, flexShrink: 0, marginLeft: '8px' }}>
-          <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=200&q=80"
-            alt="Villa"
+          <div
             style={{
-              width: '74px',
-              height: '56px',
+              padding: '6px 12px',
               borderRadius: '10px',
-              objectFit: 'cover',
+              background: 'rgba(255, 255, 255, 0.15)',
               border: '1.5px solid rgba(255, 255, 255, 0.25)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+              color: '#FFFFFF',
+              fontSize: '11px',
+              fontWeight: '800',
+              textAlign: 'center',
             }}
-          />
+          >
+            <div>📐 Land Sites</div>
+            <div style={{ fontSize: '9px', opacity: 0.85, marginTop: '2px' }}>Verified Registry</div>
+          </div>
         </div>
 
         <div
@@ -241,8 +270,8 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
         {SA_KPIS.map((kpi) => (
           <div
             key={kpi.id}
-            className="sa-pressable"
-            onClick={() => onNavigate(kpi.route)}
+            className={kpi.route ? "sa-pressable" : ""}
+            onClick={() => kpi.route && onNavigate(kpi.route)}
             style={{
               backgroundColor: '#FFFFFF',
               borderRadius: '16px',
@@ -253,6 +282,7 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
               flexDirection: 'column',
               justifyContent: 'space-between',
               minHeight: '94px',
+              cursor: kpi.route ? 'pointer' : 'default',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -277,7 +307,7 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
 
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A', lineHeight: 1 }}>
-                {kpi.value}
+                {getKpiValue(kpi.id, kpi.value)}
               </span>
               {kpi.trend && (
                 <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#16A34A' }}>
@@ -531,17 +561,26 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
                 boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
               }}
             >
-              <img
-                src={prop.img}
-                alt={prop.title}
+              <div
                 style={{
-                  width: '68px',
-                  height: '68px',
+                  width: '46px',
+                  height: '46px',
                   borderRadius: '12px',
-                  objectFit: 'cover',
+                  backgroundColor: '#FEF3C7',
+                  color: '#B45309',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '800',
+                  fontSize: '11px',
                   flexShrink: 0,
+                  lineHeight: 1.1,
                 }}
-              />
+              >
+                <span>Land</span>
+                <span>#{prop.landId}</span>
+              </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <h4
                   style={{

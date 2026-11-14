@@ -1,27 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { rmService } from '../services/rmService.js';
 
-const RM_KPIS = [
+const DEFAULT_KPIS = [
   {
-    id: 'enquiries',
-    label: 'My Enquiries',
+    id: 'leads',
+    label: 'Agent Leads',
     value: '18',
-    trend: '↑ 20%',
+    trend: 'Live',
     bgTint: '#E0F2FE',
     iconColor: '#0284C7',
-    route: 'enquiries',
-    icon: (
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"></path>
-      </svg>
-    ),
-  },
-  {
-    id: 'customers',
-    label: 'My Customers',
-    value: '12',
-    trend: '↑ 9%',
-    bgTint: '#FFEDD5',
-    iconColor: '#EA580C',
     route: 'customers',
     icon: (
       <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
@@ -30,10 +17,24 @@ const RM_KPIS = [
     ),
   },
   {
+    id: 'agents',
+    label: 'Managed Agents',
+    value: '6',
+    trend: 'Active',
+    bgTint: '#FFEDD5',
+    iconColor: '#EA580C',
+    route: 'more',
+    icon: (
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"></path>
+      </svg>
+    ),
+  },
+  {
     id: 'visits',
     label: 'Site Visits',
-    value: '6',
-    trend: null,
+    value: '4',
+    trend: 'Pending Cab',
     bgTint: '#FEF3C7',
     iconColor: '#D97706',
     route: 'visits',
@@ -45,9 +46,9 @@ const RM_KPIS = [
   },
   {
     id: 'bookings',
-    label: 'Bookings',
+    label: 'Plot Bookings',
     value: '3',
-    trend: null,
+    trend: 'Review',
     bgTint: '#F3E8FF',
     iconColor: '#9333EA',
     route: 'more',
@@ -59,119 +60,176 @@ const RM_KPIS = [
   },
 ];
 
-const TODAYS_TASKS = [
+const FALLBACK_LEADS = [
   {
-    id: 'task-1',
-    dotColor: '#F97316',
-    time: '10:00 AM',
-    title: 'Site Visit - Rahul Sharma',
-    subtitle: 'Gomti Nagar, Lucknow',
-    badgeText: 'Upcoming',
-    badgeBg: '#DCFCE7',
-    badgeColor: '#16A34A',
-    isAction: false,
-    route: 'visits',
+    id: 'lead-1',
+    customerName: 'Rahul Sharma',
+    customerPhone: '+917275004901',
+    agentName: 'Vikas Verma (Agent #102)',
+    agentPhone: '+919876543210',
+    propertyInterest: 'एयरपोर्ट चकेरी साइट (Plot #14)',
+    budget: '₹ 15 - 20 Lakh (200 गज)',
+    status: 'new',
+    statusLabel: 'New Lead',
+    statusBg: '#DCFCE7',
+    statusColor: '#16A34A',
+    time: '15 mins ago',
   },
   {
-    id: 'task-2',
-    dotColor: '#3B82F6',
-    time: '12:00 PM',
-    title: 'Call - Preeti Kumar',
-    subtitle: 'Discuss budget',
-    badgeText: 'Call',
-    badgeBg: '#DBEAFE',
-    badgeColor: '#2563EB',
-    isAction: true,
-    phone: '+917275004901',
-    route: 'enquiries',
+    id: 'lead-2',
+    customerName: 'Preeti Kumar',
+    customerPhone: '+917275004901',
+    agentName: 'Sunil Kumar (Agent #105)',
+    agentPhone: '+919876543211',
+    propertyInterest: 'अवध ग्रीन सिटी लैंड प्रोजेक्ट',
+    budget: '₹ 12 Lakh (150 गज)',
+    status: 'contacted',
+    statusLabel: 'Call Done',
+    statusBg: '#DBEAFE',
+    statusColor: '#2563EB',
+    time: '45 mins ago',
   },
   {
-    id: 'task-3',
-    dotColor: '#F59E0B',
-    time: '02:30 PM',
-    title: 'Site Visit - Amit Mishra',
-    subtitle: 'Faizabad Road',
-    badgeText: 'Upcoming',
-    badgeBg: '#DCFCE7',
-    badgeColor: '#16A34A',
-    isAction: false,
-    route: 'visits',
-  },
-  {
-    id: 'task-4',
-    dotColor: '#10B981',
-    time: '04:00 PM',
-    title: 'Follow Up - Sneha Gupta',
-    subtitle: 'Send property details',
-    badgeText: 'Follow Up',
-    badgeBg: '#FFE4E6',
-    badgeColor: '#E11D48',
-    isAction: false,
-    route: 'enquiries',
-  },
-];
-
-const MY_ENQUIRIES_ITEMS = [
-  {
-    id: 'enq-1',
-    initials: 'RS',
-    avatarBg: '#0D9488',
-    name: 'Rahul Sharma',
-    detail: '3 BHK in Gomti Nagar',
-    badgeText: 'New',
-    badgeBg: '#DCFCE7',
-    badgeColor: '#16A34A',
-    time: '10 mins ago',
-    type: 'new',
-  },
-  {
-    id: 'enq-2',
-    initials: 'PK',
-    avatarBg: '#3B82F6',
-    name: 'Preeti Kumar',
-    detail: 'Plot in Faizabad Road',
-    badgeText: 'Interested',
-    badgeBg: '#DBEAFE',
-    badgeColor: '#2563EB',
-    time: '25 mins ago',
-    type: 'interested',
-  },
-  {
-    id: 'enq-3',
-    initials: 'AM',
-    avatarBg: '#64748B',
-    name: 'Amit Mishra',
-    detail: 'Independent House',
-    badgeText: 'Site Visit',
-    badgeBg: '#FEF3C7',
-    badgeColor: '#D97706',
-    time: '1 hour ago',
-    type: 'site_visit',
-  },
-  {
-    id: 'enq-4',
-    initials: 'SG',
-    avatarBg: '#94A3B8',
-    name: 'Sneha Gupta',
-    detail: '2 BHK Apartment',
-    badgeText: 'Follow Up',
-    badgeBg: '#FFE4E6',
-    badgeColor: '#E11D48',
+    id: 'lead-3',
+    customerName: 'Amit Mishra',
+    customerPhone: '+917275004901',
+    agentName: 'Deepak Tiwari (Agent #108)',
+    agentPhone: '+919876543212',
+    propertyInterest: 'कानपुर रोड कमर्शियल प्लॉट्स',
+    budget: '₹ 25 Lakh (300 गज)',
+    status: 'visit_scheduled',
+    statusLabel: 'Visit Planned',
+    statusBg: '#FEF3C7',
+    statusColor: '#D97706',
     time: '2 hours ago',
-    type: 'follow_up',
   },
 ];
 
 export default function RMDashboardView({ onNavigate = () => {} }) {
-  const [activeFilter, setActiveFilter] = useState('new');
+  const [kpis, setKpis] = useState(DEFAULT_KPIS);
+  const [recentLeads, setRecentLeads] = useState(FALLBACK_LEADS);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [feedback, setFeedback] = useState('');
 
-  const filteredEnquiries = MY_ENQUIRIES_ITEMS.filter((item) => {
-    if (activeFilter === 'new') return item.type === 'new' || true;
-    if (activeFilter === 'interested') return item.type === 'interested';
-    if (activeFilter === 'site_visit') return item.type === 'site_visit';
-    if (activeFilter === 'follow_up') return item.type === 'follow_up';
-    return true;
-  });
+  useEffect(() => {
+    let isMounted = true;
+
+    // Fetch live Dashboard KPIs
+    rmService.getDashboard().then((data) => {
+      if (isMounted && data) {
+        setKpis([
+          {
+            id: 'leads',
+            label: 'Agent Leads',
+            value: String(data.totalLeads ?? 18),
+            trend: 'Live',
+            bgTint: '#E0F2FE',
+            iconColor: '#0284C7',
+            route: 'customers',
+            icon: DEFAULT_KPIS[0].icon,
+          },
+          {
+            id: 'agents',
+            label: 'Managed Agents',
+            value: String(data.totalAgents ?? 6),
+            trend: 'Active',
+            bgTint: '#FFEDD5',
+            iconColor: '#EA580C',
+            route: 'more',
+            icon: DEFAULT_KPIS[1].icon,
+          },
+          {
+            id: 'visits',
+            label: 'Site Visits',
+            value: String(data.pendingVisits ?? 4),
+            trend: 'Pending Cab',
+            bgTint: '#FEF3C7',
+            iconColor: '#D97706',
+            route: 'visits',
+            icon: DEFAULT_KPIS[2].icon,
+          },
+          {
+            id: 'bookings',
+            label: 'Plot Bookings',
+            value: String(data.pendingBookings ?? 3),
+            trend: 'Review',
+            bgTint: '#F3E8FF',
+            iconColor: '#9333EA',
+            route: 'more',
+            icon: DEFAULT_KPIS[3].icon,
+          },
+        ]);
+      }
+    });
+
+    // Fetch live Customer Leads added by Agents
+    rmService.getLeads().then((leads) => {
+      if (isMounted && Array.isArray(leads) && leads.length > 0) {
+        const formatted = leads.slice(0, 5).map((l) => {
+          const statusMap = {
+            new: { label: 'New Lead', bg: '#DCFCE7', color: '#16A34A' },
+            contacted: { label: 'Call Done', bg: '#DBEAFE', color: '#2563EB' },
+            visit_scheduled: { label: 'Visit Planned', bg: '#FEF3C7', color: '#D97706' },
+            booked: { label: 'Booked', bg: '#F3E8FF', color: '#9333EA' },
+            lost: { label: 'Lost', bg: '#FEE2E2', color: '#DC2626' },
+          };
+          const st = statusMap[l.status] || statusMap.new;
+
+          return {
+            id: l._id,
+            customerName: l.name,
+            customerPhone: l.phone,
+            agentName: l.assignedAgent?.name ? `${l.assignedAgent.name} (Agent)` : 'Assigned Agent',
+            agentPhone: l.assignedAgent?.phone || '',
+            propertyInterest: l.interestedLand ? `Land Scheme #${l.interestedLand}` : (l.preferredLocation || 'Verified Plots'),
+            budget: l.budget ? `Budget: ${l.budget}` : 'Budget Discussion Pending',
+            status: l.status,
+            statusLabel: st.label,
+            statusBg: st.bg,
+            statusColor: st.color,
+            time: new Date(l.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        });
+        setRecentLeads(formatted);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleQuickContacted = async (leadId) => {
+    setUpdatingId(leadId);
+    try {
+      await rmService.updateLead(leadId, {
+        status: 'contacted',
+        notes: `RM contacted customer on ${new Date().toLocaleDateString('hi-IN')}`,
+      });
+      setRecentLeads((prev) =>
+        prev.map((item) =>
+          item.id === leadId
+            ? { ...item, status: 'contacted', statusLabel: 'Call Done', statusBg: '#DBEAFE', statusColor: '#2563EB' }
+            : item
+        )
+      );
+      setFeedback('Customer marked as Contacted successfully!');
+      setTimeout(() => setFeedback(''), 3000);
+    } catch (err) {
+      console.warn('Fallback update:', err.message);
+      setRecentLeads((prev) =>
+        prev.map((item) =>
+          item.id === leadId
+            ? { ...item, status: 'contacted', statusLabel: 'Call Done', statusBg: '#DBEAFE', statusColor: '#2563EB' }
+            : item
+        )
+      );
+      setFeedback('Status updated locally.');
+      setTimeout(() => setFeedback(''), 3000);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   return (
     <div className="rm-main-content rm-dashboard-view">
@@ -212,28 +270,33 @@ export default function RMDashboardView({ onNavigate = () => {} }) {
           </div>
           <div>
             <h2 style={{ fontSize: '17px', fontWeight: '800', margin: 0, letterSpacing: '-0.02em', color: '#FFFFFF' }}>
-              RM Dashboard
+              RM Relationship Desk
             </h2>
             <p style={{ fontSize: '11px', margin: '3px 0 0', color: '#CBD5E1', fontWeight: '500' }}>
-              Manage your enquiries and customers
+              Agent Leads ➔ Direct Customer Contact
             </p>
           </div>
         </div>
 
-        {/* 3D Villa House Rendering on the Right */}
-        <div style={{ zIndex: 2, flexShrink: 0, marginLeft: '8px' }}>
-          <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=200&q=80"
-            alt="Villa"
+        {/* Status Pill Badge (Replacing Villa Image) */}
+        <div style={{ zIndex: 2, flexShrink: 0 }}>
+          <span
             style={{
-              width: '74px',
-              height: '56px',
-              borderRadius: '10px',
-              objectFit: 'cover',
-              border: '1.5px solid rgba(255, 255, 255, 0.25)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+              backgroundColor: 'rgba(217, 119, 6, 0.25)',
+              border: '1px solid #D97706',
+              color: '#FDE68A',
+              fontSize: '11px',
+              fontWeight: '800',
+              padding: '6px 12px',
+              borderRadius: '9999px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '5px',
             }}
-          />
+          >
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#22C55E' }}></span>
+            RM Active
+          </span>
         </div>
 
         <div
@@ -250,6 +313,23 @@ export default function RMDashboardView({ onNavigate = () => {} }) {
         />
       </div>
 
+      {feedback && (
+        <div
+          style={{
+            backgroundColor: '#DCFCE7',
+            border: '1px solid #86EFAC',
+            color: '#15803D',
+            padding: '8px 12px',
+            borderRadius: '10px',
+            fontSize: '11.5px',
+            fontWeight: '700',
+            marginBottom: '12px',
+          }}
+        >
+          ✅ {feedback}
+        </div>
+      )}
+
       {/* 2. 4 Metric KPI Cards (2x2 Grid) */}
       <div
         style={{
@@ -259,7 +339,7 @@ export default function RMDashboardView({ onNavigate = () => {} }) {
           marginBottom: '20px',
         }}
       >
-        {RM_KPIS.map((kpi) => (
+        {kpis.map((kpi) => (
           <div
             key={kpi.id}
             className="rm-pressable"
@@ -274,6 +354,7 @@ export default function RMDashboardView({ onNavigate = () => {} }) {
               flexDirection: 'column',
               justifyContent: 'space-between',
               minHeight: '94px',
+              cursor: 'pointer',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
@@ -312,251 +393,158 @@ export default function RMDashboardView({ onNavigate = () => {} }) {
         ))}
       </div>
 
-      {/* 3. Today's Tasks (Vertical Timeline) */}
+      {/* 3. Incoming Agent Leads to Contact (Central RM Workflow) */}
       <div style={{ marginBottom: '22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', padding: '0 2px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
-            Today's Tasks
-          </h3>
+          <div>
+            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+              Agent Leads to Contact
+            </h3>
+            <span style={{ fontSize: '11px', color: '#64748B' }}>
+              Direct leads received from on-ground Agents
+            </span>
+          </div>
           <button
             type="button"
-            onClick={() => onNavigate('visits')}
+            onClick={() => onNavigate('customers')}
             style={{
               background: 'none',
               border: 'none',
-              color: '#2563EB',
+              color: '#D97706',
               fontSize: '11.5px',
               fontWeight: '700',
               cursor: 'pointer',
               padding: 0,
             }}
           >
-            View All &gt;
+            View All ({recentLeads.length}) &gt;
           </button>
         </div>
 
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '14px 12px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '14px',
-            position: 'relative',
-          }}
-        >
-          {TODAYS_TASKS.map((task, idx) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {recentLeads.map((lead) => (
             <div
-              key={task.id}
-              className="rm-pressable"
-              onClick={() => onNavigate(task.route)}
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                justifyContent: 'space-between',
-                gap: '10px',
-                position: 'relative',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', flex: 1, minWidth: 0 }}>
-                {/* Timeline Dot */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '3px' }}>
-                  <div
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      borderRadius: '50%',
-                      backgroundColor: task.dotColor,
-                      flexShrink: 0,
-                    }}
-                  />
-                  {idx < TODAYS_TASKS.length - 1 && (
-                    <div
-                      style={{
-                        width: '1px',
-                        height: '28px',
-                        backgroundColor: '#E2E8F0',
-                        marginTop: '4px',
-                      }}
-                    />
-                  )}
-                </div>
-
-                <div style={{ minWidth: 0 }}>
-                  <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#475569', display: 'block', marginBottom: '1px' }}>
-                    {task.time}
-                  </span>
-                  <div style={{ fontSize: '12.5px', fontWeight: '800', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {task.title}
-                  </div>
-                  <div style={{ fontSize: '10.5px', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {task.subtitle}
-                  </div>
-                </div>
-              </div>
-
-              {/* Status or Action Badge */}
-              <div style={{ flexShrink: 0, alignSelf: 'center' }}>
-                {task.isAction ? (
-                  <a
-                    href={`tel:${task.phone}`}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      backgroundColor: task.badgeBg,
-                      color: task.badgeColor,
-                      fontSize: '11px',
-                      fontWeight: '800',
-                      padding: '3px 12px',
-                      borderRadius: '9999px',
-                      textDecoration: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    {task.badgeText}
-                  </a>
-                ) : (
-                  <span
-                    style={{
-                      backgroundColor: task.badgeBg,
-                      color: task.badgeColor,
-                      fontSize: '10.5px',
-                      fontWeight: '800',
-                      padding: '3px 9px',
-                      borderRadius: '9999px',
-                    }}
-                  >
-                    {task.badgeText}
-                  </span>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 4. My Enquiries Section */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', padding: '0 2px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
-            My Enquiries
-          </h3>
-          <button
-            type="button"
-            onClick={() => onNavigate('enquiries')}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: '#2563EB',
-              fontSize: '11.5px',
-              fontWeight: '700',
-              cursor: 'pointer',
-              padding: 0,
-            }}
-          >
-            View All &gt;
-          </button>
-        </div>
-
-        {/* Filter Pills */}
-        <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', overflowX: 'auto', paddingBottom: '2px' }}>
-          {[
-            { id: 'new', label: 'New (6)' },
-            { id: 'interested', label: 'Interested (4)' },
-            { id: 'site_visit', label: 'Site Visit (3)' },
-            { id: 'follow_up', label: 'Follow Up (5)' },
-          ].map((tab) => {
-            const isActive = activeFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveFilter(tab.id)}
-                style={{
-                  padding: '5px 11px',
-                  borderRadius: '9999px',
-                  border: 'none',
-                  backgroundColor: isActive ? '#92400E' : '#F1F5F9',
-                  color: isActive ? '#FFFFFF' : '#475569',
-                  fontSize: '10.5px',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  transition: 'background-color 160ms ease',
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Enquiries Items */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
-          {filteredEnquiries.map((enq) => (
-            <div
-              key={enq.id}
-              className="rm-pressable"
-              onClick={() => onNavigate('enquiries')}
+              key={lead.id}
               style={{
                 backgroundColor: '#FFFFFF',
                 borderRadius: '16px',
-                padding: '11px 12px',
+                padding: '14px',
                 border: '1px solid #E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
                 boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0 }}>
-                <div
-                  style={{
-                    width: '38px',
-                    height: '38px',
-                    borderRadius: '50%',
-                    backgroundColor: enq.avatarBg,
-                    color: '#FFFFFF',
-                    fontSize: '12px',
-                    fontWeight: '800',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {enq.initials}
-                </div>
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {enq.name}
-                  </div>
-                  <div style={{ fontSize: '10.5px', color: '#64748B', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {enq.detail}
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '3px', flexShrink: 0 }}>
+              {/* Agent Attribution Banner */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  backgroundColor: '#F8FAFC',
+                  borderRadius: '8px',
+                  padding: '6px 10px',
+                  marginBottom: '10px',
+                  border: '1px solid #F1F5F9',
+                }}
+              >
+                <span style={{ fontSize: '11px', color: '#475569', fontWeight: '600' }}>
+                  👤 Added by: <strong style={{ color: '#0F172A' }}>{lead.agentName}</strong>
+                </span>
                 <span
                   style={{
-                    backgroundColor: enq.badgeBg,
-                    color: enq.badgeColor,
-                    fontSize: '10.5px',
+                    backgroundColor: lead.statusBg,
+                    color: lead.statusColor,
+                    fontSize: '10px',
                     fontWeight: '800',
-                    padding: '3px 9px',
+                    padding: '2px 8px',
                     borderRadius: '9999px',
                   }}
                 >
-                  {enq.badgeText}
+                  {lead.statusLabel}
                 </span>
-                <span style={{ fontSize: '9.5px', color: '#94A3B8', fontWeight: '500' }}>
-                  {enq.time}
-                </span>
+              </div>
+
+              {/* Customer Details */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <h4 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+                  {lead.customerName}
+                </h4>
+                <span style={{ fontSize: '11px', color: '#64748B' }}>{lead.customerPhone}</span>
+              </div>
+
+              <div style={{ fontSize: '12px', color: '#334155', marginBottom: '4px' }}>
+                🏞️ {lead.propertyInterest}
+              </div>
+
+              <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '12px' }}>
+                💰 {lead.budget} • <span style={{ color: '#94A3B8' }}>{lead.time}</span>
+              </div>
+
+              {/* Action Buttons for RM: Direct Call, WhatsApp & Mark Contacted */}
+              <div style={{ display: 'flex', gap: '8px', borderTop: '1px solid #F1F5F9', paddingTop: '10px' }}>
+                <a
+                  href={`tel:${lead.customerPhone}`}
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    backgroundColor: '#EFF6FF',
+                    color: '#2563EB',
+                    fontSize: '11.5px',
+                    fontWeight: '700',
+                    padding: '8px 0',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>📞 Call Customer</span>
+                </a>
+
+                <a
+                  href={`https://wa.me/${lead.customerPhone.replace(/[^0-9]/g, '')}?text=Hello%20${encodeURIComponent(lead.customerName)},%20I%20am%20your%20Relationship%20Manager%20from%20Shubharambh%20Realty%20regarding%20your%20interest%20in%20our%20land%20schemes.`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    flex: 1,
+                    textAlign: 'center',
+                    backgroundColor: '#DCFCE7',
+                    color: '#16A34A',
+                    fontSize: '11.5px',
+                    fontWeight: '700',
+                    padding: '8px 0',
+                    borderRadius: '8px',
+                    textDecoration: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                  }}
+                >
+                  <span>💬 WhatsApp</span>
+                </a>
+
+                {lead.status !== 'contacted' && (
+                  <button
+                    type="button"
+                    onClick={() => handleQuickContacted(lead.id)}
+                    disabled={updatingId === lead.id}
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#FEF3C7',
+                      color: '#B45309',
+                      border: '1px solid #FDE68A',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      padding: '8px 0',
+                      borderRadius: '8px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {updatingId === lead.id ? 'Saving...' : '✓ Mark Done'}
+                  </button>
+                )}
               </div>
             </div>
           ))}

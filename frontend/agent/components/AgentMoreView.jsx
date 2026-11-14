@@ -1,6 +1,24 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { agentService } from '../services/agentService.js';
 
 export default function AgentMoreView({ onNavigate = () => {} }) {
+  const [stats, setStats] = useState({ approvedBookings: 2, totalBookings: 3 });
+
+  useEffect(() => {
+    let isMounted = true;
+    agentService.getDashboard().then((dash) => {
+      if (isMounted && dash) {
+        setStats({
+          approvedBookings: dash.approvedBookings ?? 2,
+          totalBookings: dash.totalBookings ?? 3,
+        });
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <div className="agent-main-content agent-more-view">
       <div style={{ marginBottom: '16px' }}>
@@ -8,7 +26,7 @@ export default function AgentMoreView({ onNavigate = () => {} }) {
           Agent Profile & Settings
         </h2>
         <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-          Shubharambh Realty Authorized Agent
+          Shubharambh Realty Authorized Partner
         </span>
       </div>
 
@@ -26,31 +44,37 @@ export default function AgentMoreView({ onNavigate = () => {} }) {
           boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
         }}
       >
-        <img
-          src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=140&q=80"
-          alt="Agent Avatar"
+        <div
           style={{
-            width: '52px',
-            height: '52px',
+            width: '50px',
+            height: '50px',
             borderRadius: '50%',
-            objectFit: 'cover',
-            border: '2px solid #D97706',
+            backgroundColor: '#D97706',
+            color: '#FFFFFF',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '18px',
+            fontWeight: '800',
+            flexShrink: 0,
           }}
-        />
+        >
+          AG
+        </div>
         <div style={{ flex: 1 }}>
           <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
             Rishabh Tripathi
           </h3>
           <div style={{ fontSize: '11px', color: '#64748B', marginTop: '2px' }}>
-            ID: <strong style={{ color: '#0F172A' }}>SR-AGT-2026</strong> • Status: <span style={{ color: '#16A34A', fontWeight: '700' }}>Verified</span>
+            ID: <strong style={{ color: '#0F172A' }}>SR-AGT-2026</strong> • Status: <span style={{ color: '#16A34A', fontWeight: '700' }}>Verified Agent</span>
           </div>
           <div style={{ fontSize: '10.5px', color: '#94A3B8', marginTop: '2px' }}>
-            Role: Real Estate Agent / Relationship Manager
+            Role: Authorized Land & Plot Sales Partner
           </div>
         </div>
       </div>
 
-      {/* Bookings & Commissions Card */}
+      {/* Deals & Performance Card */}
       <div
         style={{
           backgroundColor: '#FFFFFF',
@@ -62,17 +86,21 @@ export default function AgentMoreView({ onNavigate = () => {} }) {
         }}
       >
         <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#0F172A', margin: '0 0 10px' }}>
-          Bookings & Performance (4 Total)
+          Deals Performance ({stats.totalBookings} Total Requests)
         </h4>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
           <div style={{ background: '#F8FAFC', padding: '10px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: '600' }}>Confirmed Deals</span>
-            <div style={{ fontSize: '18px', fontWeight: '800', color: '#16A34A', marginTop: '2px' }}>1 Closed</div>
+            <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: '600' }}>Properties Sold</span>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: '#16A34A', marginTop: '2px' }}>
+              {stats.approvedBookings} Closed
+            </div>
           </div>
           <div style={{ background: '#F8FAFC', padding: '10px', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-            <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: '600' }}>In Verification</span>
-            <div style={{ fontSize: '18px', fontWeight: '800', color: '#D97706', marginTop: '2px' }}>3 Pending</div>
+            <span style={{ fontSize: '10.5px', color: '#64748B', fontWeight: '600' }}>In Process</span>
+            <div style={{ fontSize: '18px', fontWeight: '800', color: '#D97706', marginTop: '2px' }}>
+              {Math.max(0, stats.totalBookings - stats.approvedBookings)} Pending
+            </div>
           </div>
         </div>
       </div>
@@ -99,7 +127,7 @@ export default function AgentMoreView({ onNavigate = () => {} }) {
         </div>
       </div>
 
-      {/* Action Links */}
+      {/* Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button
           type="button"
@@ -115,12 +143,13 @@ export default function AgentMoreView({ onNavigate = () => {} }) {
             cursor: 'pointer',
           }}
         >
-          Back to Dashboard
+          Back to Agent Dashboard
         </button>
 
         <button
           type="button"
           onClick={() => {
+            localStorage.removeItem('auth_token');
             document.cookie = 'user_role=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             document.cookie = 'token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
             window.location.href = '/login';

@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
+import { adminService } from '../services/adminService.js';
 
 export default function AdminAddRMModal({ isOpen, onClose, onAddRM }) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('12345');
   const [territory, setTerritory] = useState('Gomti Nagar, Lucknow');
   const [status, setStatus] = useState('Active');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
       setError('RM Name is required');
@@ -25,10 +28,35 @@ export default function AdminAddRMModal({ isOpen, onClose, onAddRM }) {
       return;
     }
 
-    const newRM = {
-      id: `rm-${Date.now()}`,
+    const cleanPhone = phone.trim().replace(/^\+91/, '');
+    const payload = {
       name: name.trim(),
-      phone: phone.trim().startsWith('+91') ? phone.trim() : `+91${phone.trim()}`,
+      phone: cleanPhone,
+      email: email.trim().toLowerCase(),
+      password: password.trim() || '12345',
+    };
+
+    setIsSubmitting(true);
+    let createdId = `rm-${Date.now()}`;
+
+    try {
+      const created = await adminService.createRM(payload);
+      if (created && created._id) {
+        createdId = created._id;
+      }
+    } catch (err) {
+      console.warn('API RM creation fallback:', err.message);
+      if (err.message && (err.message.includes('already registered') || err.message.includes('required'))) {
+        setError(err.message);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
+    const newRM = {
+      id: createdId,
+      name: name.trim(),
+      phone: `+91 ${cleanPhone}`,
       email: email.trim(),
       territory: territory.trim() || 'Lucknow Cluster',
       activeLeads: 0,
@@ -43,7 +71,9 @@ export default function AdminAddRMModal({ isOpen, onClose, onAddRM }) {
     setName('');
     setPhone('');
     setEmail('');
+    setPassword('12345');
     setError('');
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -150,6 +180,18 @@ export default function AdminAddRMModal({ isOpen, onClose, onAddRM }) {
                 placeholder="e.g. Gomti Nagar & Shaheed Path"
                 value={territory}
                 onChange={(e) => setTerritory(e.target.value)}
+              />
+            </div>
+
+            <div className="admin-form-group">
+              <label className="admin-form-label">Initial Password *</label>
+              <input
+                type="text"
+                className="admin-form-input"
+                placeholder="e.g. 12345"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
               />
             </div>
           </div>

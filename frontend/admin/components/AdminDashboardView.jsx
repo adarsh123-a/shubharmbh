@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { adminService } from '../services/adminService.js';
 
 const ADMIN_KPIS = [
   {
@@ -107,6 +108,29 @@ const RECENT_ENQUIRIES_LIST = [
 ];
 
 export default function AdminDashboardView({ onNavigate = () => {} }) {
+  const [dashboardData, setDashboardData] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    adminService.getDashboard().then((data) => {
+      if (isMounted && data) {
+        setDashboardData(data);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const getKpiValue = (id, fallback) => {
+    if (!dashboardData) return fallback;
+    if (id === 'properties') return String(dashboardData.totalLands ?? fallback);
+    if (id === 'enquiries') return String(dashboardData.pendingBookings ?? fallback);
+    if (id === 'customers') return String(dashboardData.totalAgents ?? fallback);
+    if (id === 'rms') return String(dashboardData.totalRMs ?? fallback);
+    return fallback;
+  };
+
   return (
     <div className="admin-main-content admin-dashboard-view">
       {/* 1. Admin Hero Banner */}
@@ -150,25 +174,28 @@ export default function AdminDashboardView({ onNavigate = () => {} }) {
               Admin Dashboard
             </h2>
             <p style={{ fontSize: '11px', margin: '3px 0 0', color: '#CBD5E1', fontWeight: '500' }}>
-              Manage properties, enquiries and team activity
+              Master Land Projects & Team Oversight
             </p>
           </div>
         </div>
 
-        {/* 3D Villa House Rendering on the Right */}
+        {/* Land Management Badge on the Right */}
         <div style={{ zIndex: 2, flexShrink: 0, marginLeft: '8px' }}>
-          <img
-            src="https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=200&q=80"
-            alt="Villa"
+          <div
             style={{
-              width: '74px',
-              height: '56px',
+              padding: '6px 12px',
               borderRadius: '10px',
-              objectFit: 'cover',
+              background: 'rgba(255, 255, 255, 0.15)',
               border: '1.5px solid rgba(255, 255, 255, 0.25)',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)',
+              color: '#FFFFFF',
+              fontSize: '11px',
+              fontWeight: '800',
+              textAlign: 'center',
             }}
-          />
+          >
+            <div>📐 Land Console</div>
+            <div style={{ fontSize: '9px', opacity: 0.85, marginTop: '2px' }}>Branch Operations</div>
+          </div>
         </div>
 
         <div
@@ -231,7 +258,7 @@ export default function AdminDashboardView({ onNavigate = () => {} }) {
 
             <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between' }}>
               <span style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A', lineHeight: 1 }}>
-                {kpi.value}
+                {getKpiValue(kpi.id, kpi.value)}
               </span>
               {kpi.trend && (
                 <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#16A34A' }}>

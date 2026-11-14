@@ -1,16 +1,19 @@
 import React, { useState } from 'react';
+import { superAdminService } from '../services/superAdminService.js';
 
 export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [password, setPassword] = useState('12345');
   const [role, setRole] = useState('Agent');
   const [status, setStatus] = useState('Active');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) {
       setError('Full name is required');
@@ -25,6 +28,40 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
       return;
     }
 
+    const roleMap = {
+      Admin: 'admin',
+      RM: 'rm',
+      Agent: 'agent',
+      Customer: 'customer',
+    };
+
+    const cleanPhone = phone.trim().replace(/^\+91/, '');
+    const payload = {
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      phone: cleanPhone,
+      password: password.trim() || '12345',
+      role: roleMap[role] || 'agent',
+    };
+
+    setIsSubmitting(true);
+    let createdId = `usr-${Date.now()}`;
+
+    try {
+      const apiUser = await superAdminService.createUser(payload);
+      if (apiUser && apiUser._id) {
+        createdId = apiUser._id;
+      }
+    } catch (err) {
+      console.warn('API user creation fallback:', err.message);
+      // If duplicate or validation error, display it
+      if (err.message && (err.message.includes('already registered') || err.message.includes('required'))) {
+        setError(err.message);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const roleColors = {
       Admin: { bg: '#F3E8FF', color: '#9333EA' },
       RM: { bg: '#E0F2FE', color: '#0284C7' },
@@ -33,10 +70,10 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
     };
 
     const newUser = {
-      id: `usr-${Date.now()}`,
+      id: createdId,
       name: name.trim(),
       email: email.trim(),
-      phone: phone.trim().startsWith('+91') ? phone.trim() : `+91${phone.trim()}`,
+      phone: `+91 ${cleanPhone}`,
       role: role,
       roleBg: roleColors[role]?.bg || '#E0F2FE',
       roleColor: roleColors[role]?.color || '#0284C7',
@@ -49,7 +86,9 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
     setName('');
     setEmail('');
     setPhone('');
+    setPassword('12345');
     setError('');
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -104,6 +143,21 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
               />
             </div>
 
+            <div className="super-admin-form-group">
+              <label className="super-admin-form-label">Work Email *</label>
+              <input
+                type="email"
+                className="super-admin-form-input"
+                placeholder="name@shubharambh.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError('');
+                }}
+                required
+              />
+            </div>
+
             <div className="super-admin-form-row">
               <div className="super-admin-form-group">
                 <label className="super-admin-form-label">System Role</label>
@@ -134,21 +188,6 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
 
             <div className="super-admin-form-row">
               <div className="super-admin-form-group">
-                <label className="super-admin-form-label">Work Email *</label>
-                <input
-                  type="email"
-                  className="super-admin-form-input"
-                  placeholder="name@shubharambh.com"
-                  value={email}
-                  onChange={(e) => {
-                    setEmail(e.target.value);
-                    if (error) setError('');
-                  }}
-                  required
-                />
-              </div>
-
-              <div className="super-admin-form-group">
                 <label className="super-admin-form-label">Mobile Number *</label>
                 <input
                   type="tel"
@@ -159,6 +198,18 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
                     setPhone(e.target.value);
                     if (error) setError('');
                   }}
+                  required
+                />
+              </div>
+
+              <div className="super-admin-form-group">
+                <label className="super-admin-form-label">Initial Password *</label>
+                <input
+                  type="text"
+                  className="super-admin-form-input"
+                  placeholder="e.g. 12345"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>

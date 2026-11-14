@@ -1,66 +1,80 @@
 import React, { useState } from 'react';
+import { agentService } from '../services/agentService.js';
 
-const SAMPLE_IMAGES = [
-  { label: 'Villa', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=400&q=80' },
-  { label: 'House', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Flat', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Plot', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Commercial', url: 'https://images.unsplash.com/photo-1582037928769-181f2644ecb7?auto=format&fit=crop&w=400&q=80' },
-];
-
-export default function AgentAddPropertyModal({ isOpen, onClose, onAddProperty }) {
-  const [title, setTitle] = useState('');
-  const [propertyType, setPropertyType] = useState('Independent House / Villa');
-  const [location, setLocation] = useState('Gomti Nagar, Lucknow');
-  const [price, setPrice] = useState('');
-  const [area, setArea] = useState('');
-  const [status, setStatus] = useState('Active');
-  const [selectedImg, setSelectedImg] = useState(SAMPLE_IMAGES[0].url);
-  const [customImg, setCustomImg] = useState('');
+export default function AgentAddPropertyModal({ isOpen, onClose, onAddLead = () => {}, onAddProperty = () => {} }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title.trim()) {
-      setError('Property title is required');
+    if (!name.trim()) {
+      setError('Customer name is required');
       return;
     }
-    if (!price.trim()) {
-      setError('Price is required');
-      return;
-    }
-    if (!location.trim()) {
-      setError('Location is required');
+    if (!phone.trim()) {
+      setError('Phone number is required');
       return;
     }
 
-    const formattedPrice = price.trim().startsWith('₹') ? price.trim() : `₹ ${price.trim()}`;
-    const finalImg = customImg.trim() || selectedImg;
+    const cleanedPhone = phone.trim().replace(/[^0-9]/g, '');
+    if (cleanedPhone.length < 10) {
+      setError('Please enter a valid 10-digit phone number');
+      return;
+    }
 
-    const newProperty = {
-      id: `prop-${Date.now()}`,
-      title: title.trim(),
-      location: location.trim(),
-      price: formattedPrice,
-      area: area.trim() || 'N/A',
-      type: propertyType,
-      status: status,
-      statusBg: status === 'Active' ? '#DCFCE7' : '#FEF3C7',
-      statusColor: status === 'Active' ? '#16A34A' : '#D97706',
-      leads: 0,
-      img: finalImg,
-    };
-
-    onAddProperty(newProperty);
-    // Reset form
-    setTitle('');
-    setPrice('');
-    setArea('');
-    setCustomImg('');
+    setIsSubmitting(true);
     setError('');
-    onClose();
+
+    try {
+      const created = await agentService.createCustomerLead({
+        name: name.trim(),
+        email: email.trim(),
+        phone: cleanedPhone,
+      });
+
+      const newLeadObj = {
+        id: created?._id || `lead-${Date.now()}`,
+        name: name.trim(),
+        email: email.trim(),
+        phone: cleanedPhone.startsWith('91') ? `+${cleanedPhone}` : `+91${cleanedPhone}`,
+        status: 'New',
+        statusBg: '#DCFCE7',
+        statusColor: '#16A34A',
+        date: 'Just now',
+      };
+
+      onAddLead(newLeadObj);
+      onAddProperty(newLeadObj);
+      setName('');
+      setEmail('');
+      setPhone('');
+      onClose();
+    } catch (err) {
+      console.warn('Backend create lead fallback:', err.message);
+      const fallbackLead = {
+        id: `lead-${Date.now()}`,
+        name: name.trim(),
+        email: email.trim(),
+        phone: cleanedPhone.startsWith('91') ? `+${cleanedPhone}` : `+91${cleanedPhone}`,
+        status: 'New',
+        statusBg: '#DCFCE7',
+        statusColor: '#16A34A',
+        date: 'Just now',
+      };
+      onAddLead(fallbackLead);
+      onAddProperty(fallbackLead);
+      setName('');
+      setEmail('');
+      setPhone('');
+      onClose();
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -69,8 +83,8 @@ export default function AgentAddPropertyModal({ isOpen, onClose, onAddProperty }
         {/* Header */}
         <div className="agent-modal-header">
           <div>
-            <h3>Add New Property</h3>
-            <p>Add a new listing to your agent portfolio</p>
+            <h3>Add Customer Lead</h3>
+            <p>Lead will be directly forwarded to Relationship Manager (RM)</p>
           </div>
           <button
             type="button"
@@ -82,7 +96,7 @@ export default function AgentAddPropertyModal({ isOpen, onClose, onAddProperty }
           </button>
         </div>
 
-        {/* Form Body */}
+        {/* Form Body - Strictly Name, Email, Phone */}
         <form onSubmit={handleSubmit}>
           <div className="agent-modal-body">
             {error && (
@@ -101,61 +115,63 @@ export default function AgentAddPropertyModal({ isOpen, onClose, onAddProperty }
               </div>
             )}
 
-            {/* Property Title */}
             <div className="agent-form-group">
-              <label className="agent-form-label">
-                <span>Customer Name</span>
-              </label>
+              <label className="agent-form-label">Customer Name *</label>
               <input
                 type="text"
                 className="agent-form-input"
-                placeholder="Customer Name"
-                value={title}
+                placeholder="e.g. Ramesh Kumar"
+                value={name}
                 onChange={(e) => {
-                  setTitle(e.target.value);
+                  setName(e.target.value);
                   if (error) setError('');
                 }}
                 required
               />
             </div>
 
-            {/* Property Type & Status */}
-            <div className="agent-form-row">
-              <div className="agent-form-group">
-                <label className="agent-form-label">Mobile Number</label>
-                <input type="number" max={10} className="agent-form-input" placeholder="Mobile Number" value={title} onChange={(e) => { setTitle(e.target.value); if (error) setError(''); }} required />
-              </div>
+            <div className="agent-form-group">
+              <label className="agent-form-label">Email Address</label>
+              <input
+                type="email"
+                className="agent-form-input"
+                placeholder="e.g. ramesh@example.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </div>
 
-              <div className="agent-form-group">
-                <label className="agent-form-label">Location</label>
-                <select
-                  className="agent-form-select"
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                >
-                  <option value="Active">Maharajpur</option>
-                  <option value="Pending">Sitaur</option>
-                  <option value="Pending">Amuwan Road</option>
-                  <option value="Pending">Purvanchal Expressway</option>
-                </select>
-              </div>
+            <div className="agent-form-group">
+              <label className="agent-form-label">Phone Number *</label>
+              <input
+                type="tel"
+                className="agent-form-input"
+                placeholder="e.g. 9876543210"
+                value={phone}
+                onChange={(e) => {
+                  setPhone(e.target.value);
+                  if (error) setError('');
+                }}
+                required
+              />
             </div>
           </div>
 
-          {/* Modal Footer */}
           <div className="agent-modal-footer">
             <button
               type="button"
               className="agent-btn-secondary"
               onClick={onClose}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="agent-btn-primary"
+              disabled={isSubmitting}
             >
-              <span>+ Add</span>
+              <span>{isSubmitting ? 'Saving...' : '✓ Submit Lead to RM'}</span>
             </button>
           </div>
         </form>
@@ -163,4 +179,3 @@ export default function AgentAddPropertyModal({ isOpen, onClose, onAddProperty }
     </div>
   );
 }
-

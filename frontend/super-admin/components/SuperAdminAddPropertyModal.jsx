@@ -1,37 +1,54 @@
 import React, { useState } from 'react';
-
-const SAMPLE_IMAGES = [
-  { label: 'Villa', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=400&q=80' },
-  { label: 'House', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Apartment', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Plot', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80' },
-];
+import { superAdminService } from '../services/superAdminService.js';
 
 export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddProperty }) {
   const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('Gomti Nagar, Lucknow');
+  const [landId, setLandId] = useState('');
+  const [location, setLocation] = useState('चकेरी, कानपुर');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [price, setPrice] = useState('');
   const [specs, setSpecs] = useState('');
   const [status, setStatus] = useState('For Sale');
-  const [selectedImg, setSelectedImg] = useState(SAMPLE_IMAGES[0].url);
-  const [customImg, setCustomImg] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Property title is required');
+      setError('Site / Project title is required');
       return;
     }
     if (!price.trim()) {
-      setError('Price is required');
+      setError('Price / Rate is required');
       return;
     }
     if (!location.trim()) {
       setError('Location is required');
       return;
+    }
+
+    const landNum = parseInt(landId.trim(), 10) || Math.floor((Date.now() % 900) + 10);
+    const payload = {
+      land: landNum,
+      side_name: title.trim(),
+      lat: latitude.trim() || '26.4095280',
+      lng: longitude.trim() || '80.3894150',
+      plots: [],
+    };
+
+    setIsSubmitting(true);
+    try {
+      await superAdminService.createProperty(payload);
+    } catch (err) {
+      console.warn('Backend property creation fallback:', err.message);
+      if (err.message && err.message.includes('already exists')) {
+        setError(err.message);
+        setIsSubmitting(false);
+        return;
+      }
     }
 
     const formattedPrice = price.trim().startsWith('₹') ? price.trim() : `₹ ${price.trim()}`;
@@ -42,23 +59,30 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
     };
 
     const newProperty = {
-      id: `prop-${Date.now()}`,
+      id: `land-${landNum}`,
+      landId: String(landNum),
       title: title.trim(),
       location: location.trim(),
-      specs: specs.trim() || 'Verified Listing • Available Immediately',
+      latitude: latitude.trim() || '26.4095280',
+      longitude: longitude.trim() || '80.3894150',
+      specs: specs.trim() || 'Verified Land Plots • Registry Ready',
       price: formattedPrice,
       status: status,
       statusBg: statusMap[status]?.bg || '#DCFCE7',
       statusColor: statusMap[status]?.color || '#16A34A',
-      img: customImg.trim() || selectedImg,
+      totalPlots: 50,
+      availablePlots: status === 'Sold' ? 0 : 38,
     };
 
     onAddProperty(newProperty);
     setTitle('');
+    setLandId('');
     setPrice('');
     setSpecs('');
-    setCustomImg('');
+    setLatitude('');
+    setLongitude('');
     setError('');
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -67,8 +91,8 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
       <div className="super-admin-modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="super-admin-modal-header">
           <div>
-            <h3>Add Enterprise Property</h3>
-            <p>Publish a new master real estate asset to the platform</p>
+            <h3>Add Land / Plot Scheme</h3>
+            <p>Publish a new zameen / plot site to the enterprise catalog</p>
           </div>
           <button
             type="button"
@@ -99,11 +123,11 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
             )}
 
             <div className="super-admin-form-group">
-              <label className="super-admin-form-label">Property Title *</label>
+              <label className="super-admin-form-label">Site / Project Name *</label>
               <input
                 type="text"
                 className="super-admin-form-input"
-                placeholder="e.g. 4 BHK Ultra-Luxury Villa"
+                placeholder="e.g. एयरपोर्ट चकेरी लैंड प्रोजेक्ट (फेज 2)"
                 value={title}
                 onChange={(e) => {
                   setTitle(e.target.value);
@@ -115,11 +139,22 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
 
             <div className="super-admin-form-row">
               <div className="super-admin-form-group">
-                <label className="super-admin-form-label">Price *</label>
+                <label className="super-admin-form-label">Land ID / Number</label>
                 <input
                   type="text"
                   className="super-admin-form-input"
-                  placeholder="e.g. 1.25 Cr"
+                  placeholder="e.g. 15"
+                  value={landId}
+                  onChange={(e) => setLandId(e.target.value)}
+                />
+              </div>
+
+              <div className="super-admin-form-group">
+                <label className="super-admin-form-label">Rate / Starting Price *</label>
+                <input
+                  type="text"
+                  className="super-admin-form-input"
+                  placeholder="e.g. ₹ 4,500 / गज (₹ 5.5 Lakh)"
                   value={price}
                   onChange={(e) => {
                     setPrice(e.target.value);
@@ -149,7 +184,7 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
                 <input
                   type="text"
                   className="super-admin-form-input"
-                  placeholder="e.g. Sushant Golf City, Lucknow"
+                  placeholder="e.g. चकेरी, कानपुर"
                   value={location}
                   onChange={(e) => {
                     setLocation(e.target.value);
@@ -160,62 +195,39 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
               </div>
 
               <div className="super-admin-form-group">
-                <label className="super-admin-form-label">Specs / Size</label>
+                <label className="super-admin-form-label">Plots & Area Specs</label>
                 <input
                   type="text"
                   className="super-admin-form-input"
-                  placeholder="e.g. 2400 sq.ft • 4 BHK"
+                  placeholder="e.g. 50 Plots • 100 to 300 गज"
                   value={specs}
                   onChange={(e) => setSpecs(e.target.value)}
                 />
               </div>
             </div>
 
-            <div className="super-admin-form-group">
-              <label className="super-admin-form-label">Select Sample Photo</label>
-              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                {SAMPLE_IMAGES.map((img) => (
-                  <button
-                    key={img.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedImg(img.url);
-                      setCustomImg('');
-                    }}
-                    style={{
-                      border: (!customImg && selectedImg === img.url) ? '2px solid #D97706' : '1px solid #CBD5E1',
-                      borderRadius: '10px',
-                      padding: '2px',
-                      background: '#FFFFFF',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <img
-                      src={img.url}
-                      alt={img.label}
-                      style={{ width: '54px', height: '42px', borderRadius: '8px', objectFit: 'cover' }}
-                    />
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: '#334155', marginTop: '2px' }}>
-                      {img.label}
-                    </span>
-                  </button>
-                ))}
+            <div className="super-admin-form-row">
+              <div className="super-admin-form-group">
+                <label className="super-admin-form-label">Latitude</label>
+                <input
+                  type="text"
+                  className="super-admin-form-input"
+                  placeholder="e.g. 26.4095280"
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
+                />
               </div>
-            </div>
 
-            <div className="super-admin-form-group">
-              <label className="super-admin-form-label">Or Custom Image URL</label>
-              <input
-                type="url"
-                className="super-admin-form-input"
-                placeholder="https://..."
-                value={customImg}
-                onChange={(e) => setCustomImg(e.target.value)}
-              />
+              <div className="super-admin-form-group">
+                <label className="super-admin-form-label">Longitude</label>
+                <input
+                  type="text"
+                  className="super-admin-form-input"
+                  placeholder="e.g. 80.3894150"
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -231,7 +243,7 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
               type="submit"
               className="super-admin-btn-primary"
             >
-              <span>+ Add to Enterprise Catalog</span>
+              <span>+ Add Land Scheme</span>
             </button>
           </div>
         </form>

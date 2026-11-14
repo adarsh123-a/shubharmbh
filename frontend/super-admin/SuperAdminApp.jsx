@@ -4,8 +4,8 @@ import SuperAdminHeader from './components/SuperAdminHeader.jsx';
 import SuperAdminBottomNavbar from './components/SuperAdminBottomNavbar.jsx';
 import SuperAdminDashboardView from './components/SuperAdminDashboardView.jsx';
 import SuperAdminPropertiesView from './components/SuperAdminPropertiesView.jsx';
-import SuperAdminEnquiriesView from './components/SuperAdminEnquiriesView.jsx';
 import SuperAdminUsersView from './components/SuperAdminUsersView.jsx';
+import SuperAdminActivityView from './components/SuperAdminActivityView.jsx';
 import SuperAdminMoreView from './components/SuperAdminMoreView.jsx';
 import SuperAdminSidebarDrawer from './components/SuperAdminSidebarDrawer.jsx';
 import SuperAdminNotificationDrawer from './components/SuperAdminNotificationDrawer.jsx';
@@ -68,12 +68,12 @@ export default function SuperAdminApp({ initialRoute = 'dashboard' }) {
           <SuperAdminPropertiesView onNavigate={handleNavigate} />
         )}
 
-        {activeRoute === 'enquiries' && (
-          <SuperAdminEnquiriesView onNavigate={handleNavigate} />
-        )}
-
         {activeRoute === 'users' && (
           <SuperAdminUsersView onNavigate={handleNavigate} />
+        )}
+
+        {activeRoute === 'activity' && (
+          <SuperAdminActivityView onNavigate={handleNavigate} />
         )}
 
         {activeRoute === 'more' && (
@@ -81,7 +81,7 @@ export default function SuperAdminApp({ initialRoute = 'dashboard' }) {
         )}
       </main>
 
-      {/* 3. Bottom 5-Tab Navigation Bar with 24 badge on Enquiries */}
+      {/* 3. Bottom Navigation Bar */}
       <SuperAdminBottomNavbar
         activeRoute={activeRoute}
         onNavigate={handleNavigate}

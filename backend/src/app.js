@@ -6,6 +6,10 @@ import rateLimit from 'express-rate-limit';
 
 import authRoutes from './routes/authRoutes.js';
 import propertyRoutes from './routes/propertyRoutes.js';
+import superAdminRoutes from './routes/superAdminRoutes.js';
+import adminRoutes from './routes/adminRoutes.js';
+import rmRoutes from './routes/rmRoutes.js';
+import agentRoutes from './routes/agentRoutes.js';
 import { errorHandler } from './middleware/errorMiddleware.js';
 
 const app = express();
@@ -65,6 +69,10 @@ app.get('/api/health', (req, res) => {
 // Mount Routes
 app.use('/api/auth', authLimiter, authRoutes);
 app.use('/api/properties', propertyRoutes);
+app.use('/api/super-admin', superAdminRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/rm', rmRoutes);
+app.use('/api/agent', agentRoutes);
 
 // 404 Route Catch-all
 app.use('*', (req, res) => {

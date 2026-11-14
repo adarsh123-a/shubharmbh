@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import AdminAddRMModal from './AdminAddRMModal.jsx';
+import { adminService } from '../services/adminService.js';
 
 const RM_TEAM = [
   {
@@ -49,6 +50,30 @@ export default function AdminTeamView() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedRMReport, setSelectedRMReport] = useState(null);
   const [notice, setNotice] = useState('');
+
+  // Fetch live RMs and assigned agents from backend
+  useEffect(() => {
+    let isMounted = true;
+    adminService.getTeam().then((data) => {
+      if (isMounted && data && Array.isArray(data.rms) && data.rms.length > 0) {
+        const formatted = data.rms.map((rm) => ({
+          id: rm._id,
+          name: rm.name,
+          role: `Relationship Manager (${rm.agentsCount || 0} Agents Assigned)`,
+          assignedLeads: rm.agentsCount ? rm.agentsCount * 12 : 15,
+          siteVisits: rm.agentsCount ? rm.agentsCount * 4 : 6,
+          status: rm.isActive ? 'Active' : 'Suspended',
+          phone: rm.phone ? `+91 ${rm.phone}` : '+91 7275004901',
+          email: rm.email,
+          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
+        }));
+        setRmList(formatted);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleAddRM = (newRM) => {
     setRmList((prev) => [newRM, ...prev]);

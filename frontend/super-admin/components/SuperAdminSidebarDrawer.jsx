@@ -3,9 +3,9 @@ import logoImg from '../../customer/assets/logo.png';
 
 const SA_DRAWER_NAV = [
   { id: 'dashboard', label: 'Executive Dashboard', icon: '📊' },
-  { id: 'properties', label: 'Platform Properties (128)', icon: '🏢' },
-  { id: 'enquiries', label: 'Enquiries Pipeline (342)', icon: '💬' },
-  { id: 'users', label: 'Platform Users (458)', icon: '👥' },
+  { id: 'properties', label: 'Platform Lands & Sites', icon: '🏢' },
+  { id: 'users', label: 'Platform Users', icon: '👥' },
+  { id: 'activity', label: 'Platform Audit Logs', icon: '📜' },
   { id: 'more', label: 'Governance & Settings', icon: '⚙️' },
 ];
 

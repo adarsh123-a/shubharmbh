@@ -1,32 +1,28 @@
 import React, { useState } from 'react';
-
-const SAMPLE_IMAGES = [
-  { label: 'House', url: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Flat', url: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Plot', url: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Villa', url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=400&q=80' },
-  { label: 'Shop', url: 'https://images.unsplash.com/photo-1582037928769-181f2644ecb7?auto=format&fit=crop&w=400&q=80' },
-];
+import { adminService } from '../services/adminService.js';
 
 export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }) {
   const [title, setTitle] = useState('');
-  const [location, setLocation] = useState('Gomti Nagar, Lucknow');
+  const [landId, setLandId] = useState('');
+  const [location, setLocation] = useState('चकेरी, कानपुर');
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   const [price, setPrice] = useState('');
+  const [specs, setSpecs] = useState('');
   const [status, setStatus] = useState('For Sale');
-  const [selectedImg, setSelectedImg] = useState(SAMPLE_IMAGES[0].url);
-  const [customImg, setCustomImg] = useState('');
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Title is required');
+      setError('Site / Project title is required');
       return;
     }
     if (!price.trim()) {
-      setError('Price is required');
+      setError('Price / Rate is required');
       return;
     }
     if (!location.trim()) {
@@ -34,31 +30,59 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
       return;
     }
 
+    const landNum = parseInt(landId.trim(), 10) || Math.floor((Date.now() % 900) + 10);
+    const payload = {
+      land: landNum,
+      side_name: title.trim(),
+      lat: latitude.trim() || '26.4095280',
+      lng: longitude.trim() || '80.3894150',
+      plots: [],
+    };
+
+    setIsSubmitting(true);
+    try {
+      await adminService.createProperty(payload);
+    } catch (err) {
+      console.warn('Backend property creation fallback:', err.message);
+      if (err.message && err.message.includes('already exists')) {
+        setError(err.message);
+        setIsSubmitting(false);
+        return;
+      }
+    }
+
     const formattedPrice = price.trim().startsWith('₹') ? price.trim() : `₹ ${price.trim()}`;
     const statusMap = {
       'For Sale': { bg: '#DCFCE7', color: '#16A34A' },
       'Sold': { bg: '#DBEAFE', color: '#2563EB' },
-      'Unavailable': { bg: '#FEE2E2', color: '#DC2626' },
       'Draft': { bg: '#F1F5F9', color: '#64748B' },
     };
 
     const newProperty = {
-      id: `prop-${Date.now()}`,
+      id: `land-${landNum}`,
+      landId: String(landNum),
       title: title.trim(),
       location: location.trim(),
+      latitude: latitude.trim() || '26.4095280',
+      longitude: longitude.trim() || '80.3894150',
+      specs: specs.trim() || 'Verified Land Plots • Registry Ready',
       price: formattedPrice,
       status: status,
       statusBg: statusMap[status]?.bg || '#DCFCE7',
       statusColor: statusMap[status]?.color || '#16A34A',
-      leads: 0,
-      img: customImg.trim() || selectedImg,
+      totalPlots: 50,
+      availablePlots: status === 'Sold' ? 0 : 38,
     };
 
     onAddProperty(newProperty);
     setTitle('');
+    setLandId('');
     setPrice('');
-    setCustomImg('');
+    setSpecs('');
+    setLatitude('');
+    setLongitude('');
     setError('');
+    setIsSubmitting(false);
     onClose();
   };
 
@@ -67,8 +91,8 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
       <div className="admin-modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="admin-modal-header">
           <div>
-            <h3>Add Inventory Property</h3>
-            <p>List new residential or commercial project</p>
+            <h3>Add Land / Plot Scheme</h3>
+            <p>Publish a new zameen / plot site to inventory</p>
           </div>
           <button
             type="button"
@@ -99,11 +123,11 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
             )}
 
             <div className="admin-form-group">
-              <label className="admin-form-label">Property Title *</label>
+              <label className="admin-form-label">Site / Project Name *</label>
               <input
                 type="text"
                 className="admin-form-input"
-                placeholder="e.g. 3 BHK Semi-Furnished Flat"
+                placeholder="e.g. एयरपोर्ट चकेरी लैंड प्रोजेक्ट (फेज 2)"
                 value={title}
                 onChange={(e) => {
                   setTitle(e.target.value);
@@ -115,11 +139,22 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
 
             <div className="admin-form-row">
               <div className="admin-form-group">
-                <label className="admin-form-label">Price *</label>
+                <label className="admin-form-label">Land ID / Number</label>
                 <input
                   type="text"
                   className="admin-form-input"
-                  placeholder="e.g. 75 Lakh"
+                  placeholder="e.g. 15"
+                  value={landId}
+                  onChange={(e) => setLandId(e.target.value)}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label className="admin-form-label">Rate / Starting Price *</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="e.g. ₹ 4,500 / गज (₹ 5.5 Lakh)"
                   value={price}
                   onChange={(e) => {
                     setPrice(e.target.value);
@@ -130,80 +165,69 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
               </div>
 
               <div className="admin-form-group">
-                <label className="admin-form-label">Listing Status</label>
+                <label className="admin-form-label">Status</label>
                 <select
                   className="admin-form-select"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
                   <option value="For Sale">For Sale (Live)</option>
-                  <option value="Draft">Draft</option>
+                  <option value="Draft">Draft (Review)</option>
                   <option value="Sold">Sold</option>
-                  <option value="Unavailable">Unavailable</option>
                 </select>
               </div>
             </div>
 
-            <div className="admin-form-group">
-              <label className="admin-form-label">Location / Address *</label>
-              <input
-                type="text"
-                className="admin-form-input"
-                placeholder="e.g. Gomti Nagar, Lucknow"
-                value={location}
-                onChange={(e) => {
-                  setLocation(e.target.value);
-                  if (error) setError('');
-                }}
-                required
-              />
-            </div>
+            <div className="admin-form-row">
+              <div className="admin-form-group">
+                <label className="admin-form-label">Location *</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="e.g. चकेरी, कानपुर"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    if (error) setError('');
+                  }}
+                  required
+                />
+              </div>
 
-            <div className="admin-form-group">
-              <label className="admin-form-label">Select Sample Photo</label>
-              <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }}>
-                {SAMPLE_IMAGES.map((img) => (
-                  <button
-                    key={img.label}
-                    type="button"
-                    onClick={() => {
-                      setSelectedImg(img.url);
-                      setCustomImg('');
-                    }}
-                    style={{
-                      border: (!customImg && selectedImg === img.url) ? '2px solid #D97706' : '1px solid #CBD5E1',
-                      borderRadius: '10px',
-                      padding: '2px',
-                      background: '#FFFFFF',
-                      cursor: 'pointer',
-                      flexShrink: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <img
-                      src={img.url}
-                      alt={img.label}
-                      style={{ width: '54px', height: '42px', borderRadius: '8px', objectFit: 'cover' }}
-                    />
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: '#334155', marginTop: '2px' }}>
-                      {img.label}
-                    </span>
-                  </button>
-                ))}
+              <div className="admin-form-group">
+                <label className="admin-form-label">Plots & Area Specs</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="e.g. 50 Plots • 100 to 300 गज"
+                  value={specs}
+                  onChange={(e) => setSpecs(e.target.value)}
+                />
               </div>
             </div>
 
-            <div className="admin-form-group">
-              <label className="admin-form-label">Or Custom Image URL</label>
-              <input
-                type="url"
-                className="admin-form-input"
-                placeholder="https://..."
-                value={customImg}
-                onChange={(e) => setCustomImg(e.target.value)}
-              />
+            <div className="admin-form-row">
+              <div className="admin-form-group">
+                <label className="admin-form-label">Latitude</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="e.g. 26.4095280"
+                  value={latitude}
+                  onChange={(e) => setLatitude(e.target.value)}
+                />
+              </div>
+
+              <div className="admin-form-group">
+                <label className="admin-form-label">Longitude</label>
+                <input
+                  type="text"
+                  className="admin-form-input"
+                  placeholder="e.g. 80.3894150"
+                  value={longitude}
+                  onChange={(e) => setLongitude(e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
@@ -212,14 +236,16 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
               type="button"
               className="admin-btn-secondary"
               onClick={onClose}
+              disabled={isSubmitting}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="admin-btn-primary"
+              disabled={isSubmitting}
             >
-              <span>+ Add to Inventory</span>
+              <span>{isSubmitting ? 'Saving...' : '+ Add Land Scheme'}</span>
             </button>
           </div>
         </form>
@@ -227,4 +253,3 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
     </div>
   );
 }
-

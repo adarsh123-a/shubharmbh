@@ -67,6 +67,12 @@ export default function LoginApp() {
 
     try {
       const response = await authService.login(identifier, password);
+      if (response.token) {
+        localStorage.setItem('auth_token', response.token);
+      }
+      if (response.user) {
+        localStorage.setItem('user_info', JSON.stringify(response.user));
+      }
       setSuccessMessage('Login successful! Redirecting...');
       setTimeout(() => {
         navigateByRole(response.user.role);

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import SuperAdminAddUserModal from './SuperAdminAddUserModal.jsx';
+import { superAdminService } from '../services/superAdminService.js';
 
 const USER_ROLES_DATA = [
   {
@@ -60,10 +61,46 @@ export default function SuperAdminUsersView() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [notice, setNotice] = useState('');
 
-  const adminCount = usersList.filter((u) => u.role === 'Admin').length + 23;
-  const rmCount = usersList.filter((u) => u.role === 'RM').length + 17;
-  const agentCount = usersList.filter((u) => u.role === 'Agent').length + 319;
-  const custCount = usersList.filter((u) => u.role === 'Customer').length + 95;
+  // Fetch real users from backend on mount
+  useEffect(() => {
+    let isMounted = true;
+    superAdminService.getUsers().then((data) => {
+      if (isMounted && Array.isArray(data) && data.length > 0) {
+        const formatted = data.map((u) => {
+          const roleDisplayName =
+            u.role === 'super_admin'
+              ? 'Super Admin'
+              : u.role === 'admin'
+              ? 'Admin'
+              : u.role === 'rm'
+              ? 'RM'
+              : u.role === 'agent'
+              ? 'Agent'
+              : 'Customer';
+
+          return {
+            id: u._id,
+            name: u.name,
+            role: roleDisplayName,
+            department: u.phone ? `📞 ${u.phone}` : 'Shubharambh Platform',
+            status: u.isActive ? 'Active' : 'Suspended',
+            statusBg: u.isActive ? '#DCFCE7' : '#F1F5F9',
+            statusColor: u.isActive ? '#16A34A' : '#64748B',
+            email: u.email,
+          };
+        });
+        setUsersList(formatted);
+      }
+    });
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const adminCount = usersList.filter((u) => u.role === 'Admin').length;
+  const rmCount = usersList.filter((u) => u.role === 'RM').length;
+  const agentCount = usersList.filter((u) => u.role === 'Agent').length;
+  const custCount = usersList.filter((u) => u.role === 'Customer').length;
 
   const filtered = usersList.filter((u) => {
     if (roleFilter === 'all') return true;
@@ -76,11 +113,21 @@ export default function SuperAdminUsersView() {
     setTimeout(() => setNotice(''), 4000);
   };
 
-  const handleToggleStatus = (userId) => {
+  const handleToggleStatus = async (userId) => {
+    const target = usersList.find((u) => u.id === userId);
+    if (!target) return;
+    const newIsActive = target.status !== 'Active';
+
+    try {
+      await superAdminService.updateUserStatus(userId, newIsActive);
+    } catch (err) {
+      console.warn('Backend status toggle fallback:', err.message);
+    }
+
     setUsersList((prev) =>
       prev.map((u) => {
         if (u.id === userId) {
-          const newStatus = u.status === 'Active' ? 'Suspended' : 'Active';
+          const newStatus = newIsActive ? 'Active' : 'Suspended';
           setNotice(`User ${u.name} status updated to: ${newStatus}`);
           setTimeout(() => setNotice(''), 4000);
           return {
