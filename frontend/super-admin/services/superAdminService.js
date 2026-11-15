@@ -83,6 +83,8 @@ export const superAdminService = {
         credentials: 'include',
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const ct = res.headers.get('content-type');
+      if (!ct || !ct.includes('application/json')) return null;
       const data = await res.json();
       return Array.isArray(data.data) ? data.data : [];
     } catch (err) {
@@ -98,7 +100,13 @@ export const superAdminService = {
       credentials: 'include',
       body: JSON.stringify(propertyData),
     });
-    const data = await res.json();
+    const ct = res.headers.get('content-type');
+    let data = {};
+    if (ct && ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server error (${res.status}): Backend server connect nahi ho saka.`);
+    }
     if (!res.ok) throw new Error(data.message || 'Failed to create land scheme');
     return data.data;
   },
@@ -110,7 +118,13 @@ export const superAdminService = {
       credentials: 'include',
       body: JSON.stringify(propertyData),
     });
-    const data = await res.json();
+    const ct = res.headers.get('content-type');
+    let data = {};
+    if (ct && ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server error (${res.status}): Backend server connect nahi ho saka.`);
+    }
     if (!res.ok) throw new Error(data.message || 'Failed to update land scheme');
     return data.data;
   },
@@ -121,7 +135,13 @@ export const superAdminService = {
       headers: getAuthHeaders(),
       credentials: 'include',
     });
-    const data = await res.json();
+    const ct = res.headers.get('content-type');
+    let data = {};
+    if (ct && ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server error (${res.status}): Backend server connect nahi ho saka.`);
+    }
     if (!res.ok) throw new Error(data.message || 'Failed to delete land scheme');
     return data.data;
   },

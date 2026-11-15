@@ -42,50 +42,53 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
     };
 
     setIsSubmitting(true);
-    try {
-      await superAdminService.createProperty(payload);
-    } catch (err) {
-      console.warn('Backend property creation fallback:', err.message);
-      if (err.message && err.message.includes('already exists')) {
-        setError(err.message);
-        setIsSubmitting(false);
-        return;
-      }
-    }
-
-    const formattedPrice = price.trim().startsWith('₹') ? price.trim() : `₹ ${price.trim()}`;
-    const statusMap = {
-      'For Sale': { bg: '#DCFCE7', color: '#16A34A' },
-      'Sold': { bg: '#DBEAFE', color: '#2563EB' },
-      'Draft': { bg: '#F1F5F9', color: '#64748B' },
-    };
-
-    const newProperty = {
-      id: `land-${landNum}`,
-      landId: String(landNum),
-      title: title.trim(),
-      location: location.trim(),
-      latitude: latitude.trim() || '26.4095280',
-      longitude: longitude.trim() || '80.3894150',
-      specs: specs.trim() || 'Verified Land Plots • Registry Ready',
-      price: formattedPrice,
-      status: status,
-      statusBg: statusMap[status]?.bg || '#DCFCE7',
-      statusColor: statusMap[status]?.color || '#16A34A',
-      totalPlots: 50,
-      availablePlots: status === 'Sold' ? 0 : 38,
-    };
-
-    onAddProperty(newProperty);
-    setTitle('');
-    setLandId('');
-    setPrice('');
-    setSpecs('');
-    setLatitude('');
-    setLongitude('');
     setError('');
-    setIsSubmitting(false);
-    onClose();
+
+    try {
+      const created = await superAdminService.createProperty(payload);
+
+      const formattedPrice = price.trim().startsWith('₹') ? price.trim() : `₹ ${price.trim()}`;
+      const statusMap = {
+        'For Sale': { bg: '#DCFCE7', color: '#16A34A' },
+        'Sold': { bg: '#DBEAFE', color: '#2563EB' },
+        'Draft': { bg: '#F1F5F9', color: '#64748B' },
+      };
+
+      const finalPlots = Array.isArray(created?.plots) ? created.plots : [];
+      const totalPlotsCount = finalPlots.length || 20;
+      const availCount = status === 'Sold' ? 0 : (finalPlots.length > 0 ? finalPlots.filter((p) => p.status === 'available').length : 20);
+
+      const newProperty = {
+        id: `land-${created?.land || landNum}`,
+        landId: String(created?.land || landNum),
+        title: created?.side_name || title.trim(),
+        location: created?.location || location.trim(),
+        latitude: created?.lat || latitude.trim() || '26.4095280',
+        longitude: created?.lng || longitude.trim() || '80.3894150',
+        specs: specs.trim() || `${totalPlotsCount} Plots • Verified Land Plots • Registry Ready`,
+        price: created?.price || formattedPrice,
+        status: status,
+        statusBg: statusMap[status]?.bg || '#DCFCE7',
+        statusColor: statusMap[status]?.color || '#16A34A',
+        totalPlots: totalPlotsCount,
+        availablePlots: availCount,
+      };
+
+      onAddProperty(newProperty);
+      setTitle('');
+      setLandId('');
+      setPrice('');
+      setSpecs('');
+      setLatitude('');
+      setLongitude('');
+      setError('');
+      setIsSubmitting(false);
+      onClose();
+    } catch (err) {
+      console.error('Property creation failed:', err);
+      setError(err.message || 'सर्वर से कनेक्ट नहीं हो सका या डेटा सेव नहीं हुआ। कृपया दोबारा प्रयास करें।');
+      setIsSubmitting(false);
+    }
   };
 
   return (
