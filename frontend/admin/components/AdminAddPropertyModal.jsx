@@ -141,25 +141,27 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
 
             <div className="admin-form-row">
               <div className="admin-form-group">
-                <label className="admin-form-label">Land ID / Number</label>
+                <label className="admin-form-label">Land ID / Number (Digits only)</label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="admin-form-input"
                   placeholder="e.g. 15"
                   value={landId}
-                  onChange={(e) => setLandId(e.target.value)}
+                  onChange={(e) => setLandId(e.target.value.replace(/\D/g, ''))}
                 />
               </div>
 
               <div className="admin-form-group">
-                <label className="admin-form-label">Rate / Starting Price *</label>
+                <label className="admin-form-label">Rate / Starting Price (₹ Digits only) *</label>
                 <input
                   type="text"
+                  inputMode="numeric"
                   className="admin-form-input"
-                  placeholder="e.g. ₹ 4,500 / गज (₹ 5.5 Lakh)"
+                  placeholder="e.g. 4500 (per गज)"
                   value={price}
                   onChange={(e) => {
-                    setPrice(e.target.value);
+                    setPrice(e.target.value.replace(/\D/g, ''));
                     if (error) setError('');
                   }}
                   required
@@ -210,24 +212,26 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
 
             <div className="admin-form-row">
               <div className="admin-form-group">
-                <label className="admin-form-label">Latitude</label>
+                <label className="admin-form-label">Latitude (Numbers only)</label>
                 <input
                   type="text"
+                  inputMode="decimal"
                   className="admin-form-input"
                   placeholder="e.g. 26.4095280"
                   value={latitude}
-                  onChange={(e) => setLatitude(e.target.value)}
+                  onChange={(e) => setLatitude(e.target.value.replace(/[^0-9.]/g, ''))}
                 />
               </div>
 
               <div className="admin-form-group">
-                <label className="admin-form-label">Longitude</label>
+                <label className="admin-form-label">Longitude (Numbers only)</label>
                 <input
                   type="text"
+                  inputMode="decimal"
                   className="admin-form-input"
                   placeholder="e.g. 80.3894150"
                   value={longitude}
-                  onChange={(e) => setLongitude(e.target.value)}
+                  onChange={(e) => setLongitude(e.target.value.replace(/[^0-9.]/g, ''))}
                 />
               </div>
             </div>

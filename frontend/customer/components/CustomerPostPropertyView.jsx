@@ -7,13 +7,18 @@ export default function CustomerPostPropertyView({ onPropertyAdded = () => { }, 
     location: '',
     price: '',
     area: '',
-    contact: '+91 7275004901',
+    contact: '',
     description: '',
   });
   const [submitted, setSubmitted] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    if (name === 'contact') {
+      value = value.replace(/\D/g, '').slice(0, 10);
+    } else if (name === 'price' || name === 'area') {
+      value = value.replace(/\D/g, '');
+    }
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 

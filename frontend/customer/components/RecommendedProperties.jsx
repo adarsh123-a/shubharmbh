@@ -1,63 +1,6 @@
 import React, { useState } from 'react';
 
-const PROPERTIES = [
-  {
-    id: 'p1',
-    category: 'residential',
-    title: '3 BHK Independent House',
-    location: 'Ramadevi / Friends Colony, Kanpur Nagar',
-    price: '₹ 85 Lakh',
-    emi: 'EMI starts ₹ 62,400/mo',
-    area: '1600 sq.ft',
-    bhk: '3 BHK',
-    baths: '3 Bath',
-    isVerified: true,
-    isFeatured: true,
-    image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 'p2',
-    category: 'residential',
-    title: '2 BHK Luxury Apartment',
-    location: 'Gomti Nagar Extension, Lucknow',
-    price: '₹ 65 Lakh',
-    emi: 'EMI starts ₹ 47,800/mo',
-    area: '1200 sq.ft',
-    bhk: '2 BHK',
-    baths: '2 Bath',
-    isVerified: true,
-    isFeatured: false,
-    image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 'p3',
-    category: 'luxury',
-    title: '4 BHK Grand Signature Villa',
-    location: 'Sultanpur Road, Lucknow',
-    price: '₹ 1.85 Cr',
-    emi: 'EMI starts ₹ 1,35,000/mo',
-    area: '3200 sq.ft',
-    bhk: '4 BHK',
-    baths: '4 Bath',
-    isVerified: true,
-    isFeatured: true,
-    image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    id: 'p4',
-    category: 'plots',
-    title: 'Gated Township Freehold Plot',
-    location: 'Faizabad Road, Lucknow',
-    price: '₹ 42 Lakh',
-    emi: 'Bank Loan Available',
-    area: '1800 sq.ft',
-    bhk: 'Corner Plot',
-    baths: 'East Facing',
-    isVerified: true,
-    isFeatured: false,
-    image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80',
-  },
-];
+const PROPERTIES = [];
 
 export default function RecommendedProperties({ activeCategory, searchQuery, onEnquire }) {
   const [favorites, setFavorites] = useState(['p1']);

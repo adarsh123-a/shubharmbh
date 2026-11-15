@@ -2,51 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AdminAddRMModal from './AdminAddRMModal.jsx';
 import { adminService } from '../services/adminService.js';
 
-const RM_TEAM = [
-  {
-    id: 'rm-1',
-    name: 'Ayush Srivastava',
-    role: 'Senior RM (Gomti Nagar & Indira Nagar)',
-    assignedLeads: 28,
-    siteVisits: 14,
-    status: 'Active',
-    phone: '+917275004901',
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 'rm-2',
-    name: 'Rishabh Tiwari',
-    role: 'Field RM (Faizabad Road & Sultanpur Rd)',
-    assignedLeads: 22,
-    siteVisits: 11,
-    status: 'Active',
-    phone: '+917275004901',
-    avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 'rm-3',
-    name: 'Pooja Verma',
-    role: 'Key Accounts RM (Golf City & Luxury Villas)',
-    assignedLeads: 25,
-    siteVisits: 16,
-    status: 'Active',
-    phone: '+917275004901',
-    avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=120&q=80',
-  },
-  {
-    id: 'rm-4',
-    name: 'Amitabh Verma',
-    role: 'Commercial RM (Hazratganj & Alambagh)',
-    assignedLeads: 19,
-    siteVisits: 9,
-    status: 'On Site',
-    phone: '+917275004901',
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=120&q=80',
-  },
-];
-
 export default function AdminTeamView() {
-  const [rmList, setRmList] = useState(RM_TEAM);
+  const [rmList, setRmList] = useState([]);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [selectedRMReport, setSelectedRMReport] = useState(null);
   const [notice, setNotice] = useState('');
@@ -138,7 +95,14 @@ export default function AdminTeamView() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
-        {rmList.map((rm) => (
+        {rmList.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>👔</div>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1E293B', margin: '0 0 4px' }}>No Relationship Managers Found</h4>
+            <p style={{ fontSize: '12px', margin: 0 }}>Click "+ Add RM" to assign branch territories and managers.</p>
+          </div>
+        ) : (
+          rmList.map((rm) => (
           <div
             key={rm.id}
             style={{
@@ -232,7 +196,7 @@ export default function AdminTeamView() {
               </button>
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* RM Performance Report Modal */}

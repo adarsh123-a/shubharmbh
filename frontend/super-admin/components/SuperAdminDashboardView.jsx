@@ -126,39 +126,20 @@ const SA_KPIS = [
   },
 ];
 
-const RECENT_PROPERTIES_LIST = [
-  {
-    id: 'land-10',
-    landId: '10',
-    title: 'एयरपोर्ट चकेरी साइट',
-    location: 'चकेरी, कानपुर, उत्तर प्रदेश',
-    specs: '48 Plots • 100-300 गज • Immediate Registry',
-    price: '₹ 4,500 / गज',
-    status: 'For Sale',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-  },
-  {
-    id: 'land-11',
-    landId: '11',
-    title: 'अवध ग्रीन सिटी लैंड प्रोजेक्ट',
-    location: 'सुल्तानपुर रोड, लखनऊ',
-    specs: '65 Plots • 150-500 गज • Clear Title',
-    price: '₹ 5,200 / गज',
-    status: 'For Sale',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-  },
-];
-
 export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
   const [dashboardData, setDashboardData] = useState(null);
+  const [recentProperties, setRecentProperties] = useState([]);
 
   useEffect(() => {
     let isMounted = true;
     superAdminService.getDashboard().then((data) => {
       if (isMounted && data) {
         setDashboardData(data);
+      }
+    });
+    superAdminService.getProperties().then((props) => {
+      if (isMounted && Array.isArray(props)) {
+        setRecentProperties(props.slice(0, 3));
       }
     });
     return () => {
@@ -545,83 +526,89 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-          {RECENT_PROPERTIES_LIST.map((prop) => (
-            <div
-              key={prop.id}
-              className="sa-pressable"
-              onClick={() => onNavigate('properties')}
-              style={{
-                backgroundColor: '#FFFFFF',
-                borderRadius: '16px',
-                padding: '10px 12px',
-                border: '1px solid #E2E8F0',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
-              }}
-            >
+          {recentProperties.length === 0 ? (
+            <div style={{ padding: '24px 16px', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B', fontSize: '12px' }}>
+              No land schemes listed yet. Click "+ New Project" to add.
+            </div>
+          ) : (
+            recentProperties.map((prop) => (
               <div
+                key={prop.land || prop._id || prop.id}
+                className="sa-pressable"
+                onClick={() => onNavigate('properties')}
                 style={{
-                  width: '46px',
-                  height: '46px',
-                  borderRadius: '12px',
-                  backgroundColor: '#FEF3C7',
-                  color: '#B45309',
+                  backgroundColor: '#FFFFFF',
+                  borderRadius: '16px',
+                  padding: '10px 12px',
+                  border: '1px solid #E2E8F0',
                   display: 'flex',
-                  flexDirection: 'column',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '800',
-                  fontSize: '11px',
-                  flexShrink: 0,
-                  lineHeight: 1.1,
+                  gap: '12px',
+                  boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
                 }}
               >
-                <span>Land</span>
-                <span>#{prop.landId}</span>
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <h4
+                <div
                   style={{
-                    fontSize: '13px',
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '12px',
+                    backgroundColor: '#FEF3C7',
+                    color: '#B45309',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
                     fontWeight: '800',
-                    color: '#0F172A',
-                    margin: '0 0 2px',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
+                    fontSize: '11px',
+                    flexShrink: 0,
+                    lineHeight: 1.1,
                   }}
                 >
-                  {prop.title}
-                </h4>
-                <div style={{ fontSize: '10.5px', color: '#64748B', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {prop.location}
+                  <span>Land</span>
+                  <span>#{prop.land}</span>
                 </div>
-                <div style={{ fontSize: '9.5px', color: '#94A3B8' }}>
-                  {prop.specs}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <h4
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: '800',
+                      color: '#0F172A',
+                      margin: '0 0 2px',
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {prop.side_name || prop.title}
+                  </h4>
+                  <div style={{ fontSize: '10.5px', color: '#64748B', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {prop.location || 'उत्तर प्रदेश'}
+                  </div>
+                  <div style={{ fontSize: '9.5px', color: '#94A3B8' }}>
+                    {Array.isArray(prop.plots) ? `${prop.plots.length} Plots` : 'Verified Land Plots'}
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
-                <span style={{ fontSize: '13.5px', fontWeight: '800', color: '#0F172A' }}>
-                  {prop.price}
-                </span>
-                <span
-                  style={{
-                    backgroundColor: prop.statusBg,
-                    color: prop.statusColor,
-                    fontSize: '10px',
-                    fontWeight: '800',
-                    padding: '2px 8px',
-                    borderRadius: '9999px',
-                  }}
-                >
-                  {prop.status}
-                </span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px', flexShrink: 0 }}>
+                  <span style={{ fontSize: '13.5px', fontWeight: '800', color: '#0F172A' }}>
+                    {prop.price || '₹ 4,500 / गज'}
+                  </span>
+                  <span
+                    style={{
+                      backgroundColor: '#DCFCE7',
+                      color: '#16A34A',
+                      fontSize: '10px',
+                      fontWeight: '800',
+                      padding: '2px 8px',
+                      borderRadius: '9999px',
+                    }}
+                  >
+                    For Sale
+                  </span>
+                </div>
               </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -1,53 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { rmService } from '../services/rmService.js';
 
-const INITIAL_CUSTOMERS = [
-  {
-    id: 'lead-1',
-    customerName: 'Rahul Sharma',
-    customerPhone: '+917275004901',
-    agentName: 'Vikas Verma (Agent #102)',
-    agentPhone: '+919876543210',
-    propertyInterest: 'एयरपोर्ट चकेरी साइट (Plot #14)',
-    budget: '₹ 15 - 20 Lakh (200 गज)',
-    status: 'new',
-    notes: 'Agent ne call karke bola ki customer urgent registry chahte hain.',
-  },
-  {
-    id: 'lead-2',
-    customerName: 'Preeti Kumar',
-    customerPhone: '+917275004901',
-    agentName: 'Sunil Kumar (Agent #105)',
-    agentPhone: '+919876543211',
-    propertyInterest: 'अवध ग्रीन सिटी लैंड प्रोजेक्ट',
-    budget: '₹ 12 Lakh (150 गज)',
-    status: 'contacted',
-    notes: 'Customer se baat hui, Sunday ko site visit dekhne aayenge.',
-  },
-  {
-    id: 'lead-3',
-    customerName: 'Amit Mishra',
-    customerPhone: '+917275004901',
-    agentName: 'Deepak Tiwari (Agent #108)',
-    agentPhone: '+919876543212',
-    propertyInterest: 'कानपुर रोड कमर्शियल प्लॉट्स',
-    budget: '₹ 25 Lakh (300 गज)',
-    status: 'visit_scheduled',
-    notes: 'Cab pickup arrange karna hai Ramadevi se.',
-  },
-  {
-    id: 'lead-4',
-    customerName: 'Sneha Gupta',
-    customerPhone: '+917275004901',
-    agentName: 'Vikas Verma (Agent #102)',
-    agentPhone: '+919876543210',
-    propertyInterest: 'गंगा बैराज फार्मलैंड व प्लॉट्स',
-    budget: '₹ 18 Lakh (250 गज)',
-    status: 'contacted',
-    notes: 'Brochure aur layout map WhatsApp par share kar diya hai.',
-  },
-];
-
 const STATUS_CONFIG = {
   new: { label: 'New Lead', bg: '#DCFCE7', color: '#16A34A' },
   contacted: { label: 'Call Done / Contacted', bg: '#DBEAFE', color: '#2563EB' },
@@ -57,7 +10,7 @@ const STATUS_CONFIG = {
 };
 
 export default function RMCustomersView() {
-  const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
+  const [customers, setCustomers] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
   const [query, setQuery] = useState('');
   const [editingNotesId, setEditingNotesId] = useState(null);
@@ -237,7 +190,14 @@ export default function RMCustomersView() {
 
       {/* Customers List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        {filtered.map((cust) => {
+        {filtered.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>👥</div>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1E293B', margin: '0 0 4px' }}>No Assigned Leads</h4>
+            <p style={{ fontSize: '12px', margin: 0 }}>Agent leads assigned to your cluster will appear here.</p>
+          </div>
+        ) : (
+          filtered.map((cust) => {
           const cfg = STATUS_CONFIG[cust.status] || STATUS_CONFIG.new;
 
           return (
@@ -463,7 +423,7 @@ export default function RMCustomersView() {
               </div>
             </div>
           );
-        })}
+        }))}
       </div>
     </div>
   );

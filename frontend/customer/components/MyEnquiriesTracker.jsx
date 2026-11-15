@@ -1,30 +1,8 @@
 import React from 'react';
 
-const ENQUIRIES = [
-  {
-    id: 'e1',
-    property: '3 BHK in Gomti Nagar',
-    date: '12 Oct 2026',
-    status: 'New',
-    badgeClass: 'status-new',
-  },
-  {
-    id: 'e2',
-    property: 'Plot in Faizabad Road',
-    date: '10 Oct 2026',
-    status: 'Interested',
-    badgeClass: 'status-interested',
-  },
-  {
-    id: 'e3',
-    property: '2 BHK Apartment',
-    date: '08 Oct 2026',
-    status: 'Site Visit',
-    badgeClass: 'status-site-visit',
-  },
-];
-
 export default function MyEnquiriesTracker({ onViewAll }) {
+  const enquiries = [];
+
   return (
     <section className="tracker-container">
       <div className="section-header">
@@ -35,15 +13,21 @@ export default function MyEnquiriesTracker({ onViewAll }) {
       </div>
 
       <div className="enquiries-list">
-        {ENQUIRIES.map((enq) => (
-          <div key={enq.id} className="enquiry-card-item gpu-accel">
-            <div className="enquiry-left">
-              <span className="enquiry-name">{enq.property}</span>
-              <span className="enquiry-date">Submitted on {enq.date}</span>
-            </div>
-            <span className={`status-badge ${enq.badgeClass}`}>{enq.status}</span>
+        {enquiries.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '24px 12px', color: '#64748B', fontSize: '13px' }}>
+            No enquiries submitted yet.
           </div>
-        ))}
+        ) : (
+          enquiries.map((enq) => (
+            <div key={enq.id} className="enquiry-card-item gpu-accel">
+              <div className="enquiry-left">
+                <span className="enquiry-name">{enq.property}</span>
+                <span className="enquiry-date">Submitted on {enq.date}</span>
+              </div>
+              <span className={`status-badge ${enq.badgeClass}`}>{enq.status}</span>
+            </div>
+          ))
+        )}
       </div>
     </section>
   );

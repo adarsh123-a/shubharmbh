@@ -3,71 +3,8 @@ import SuperAdminAddPropertyModal from './SuperAdminAddPropertyModal.jsx';
 import SuperAdminEditPropertyModal from './SuperAdminEditPropertyModal.jsx';
 import { superAdminService } from '../services/superAdminService.js';
 
-const SA_INVENTORY = [
-  {
-    id: 'land-10',
-    landId: '10',
-    title: 'एयरपोर्ट चकेरी साइट',
-    location: 'चकेरी, कानपुर, उत्तर प्रदेश',
-    latitude: '26.4095280',
-    longitude: '80.3894150',
-    totalPlots: 48,
-    availablePlots: 32,
-    specs: '48 Plots • 100 to 300 गज • Immediate Registry',
-    price: '₹ 4,500 / गज (₹ 4.5 Lakh onwards)',
-    status: 'For Sale',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-  },
-  {
-    id: 'land-11',
-    landId: '11',
-    title: 'अवध ग्रीन सिटी लैंड प्रोजेक्ट',
-    location: 'सुल्तानपुर रोड, लखनऊ',
-    latitude: '26.7812000',
-    longitude: '81.0142000',
-    totalPlots: 65,
-    availablePlots: 44,
-    specs: '65 Plots • 150 to 500 गज • Clear Title & RERA Verified',
-    price: '₹ 5,200 / गज (₹ 7.8 Lakh onwards)',
-    status: 'For Sale',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-  },
-  {
-    id: 'land-12',
-    landId: '12',
-    title: 'कानपुर रोड कमर्शियल एवं आवासीय प्लॉट्स',
-    location: 'सरोजिनी नगर, कानपुर रोड, लखनऊ',
-    latitude: '26.7451000',
-    longitude: '80.8654000',
-    totalPlots: 36,
-    availablePlots: 0,
-    specs: '36 Plots • 200 to 600 गज • 100% Sold Out',
-    price: '₹ 6,000 / गज (₹ 12 Lakh onwards)',
-    status: 'Sold',
-    statusBg: '#DBEAFE',
-    statusColor: '#2563EB',
-  },
-  {
-    id: 'land-13',
-    landId: '13',
-    title: 'गंगा बैराज फार्मलैंड व प्लॉट्स',
-    location: 'गंगा बैराज रोड, कानपुर',
-    latitude: '26.5124000',
-    longitude: '80.3341000',
-    totalPlots: 28,
-    availablePlots: 28,
-    specs: '28 Plots • 250 to 1000 गज • Master Layout Approved',
-    price: '₹ 3,800 / गज (₹ 9.5 Lakh onwards)',
-    status: 'Draft',
-    statusBg: '#F1F5F9',
-    statusColor: '#64748B',
-  },
-];
-
 export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
-  const [inventoryList, setInventoryList] = useState(SA_INVENTORY);
+  const [inventoryList, setInventoryList] = useState([]);
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -279,7 +216,14 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
 
       {/* Listings */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
-        {filtered.map((prop) => (
+        {filtered.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>🏗️</div>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1E293B', margin: '0 0 4px' }}>No Land Schemes Found</h4>
+            <p style={{ fontSize: '12px', margin: 0 }}>Click "+ Add Scheme" to publish a new land project to the portal.</p>
+          </div>
+        ) : (
+          filtered.map((prop) => (
           <div
             key={prop.id}
             style={{
@@ -411,7 +355,7 @@ export default function SuperAdminPropertiesView({ onNavigate = () => {} }) {
               </button>
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* Add Scheme Modal */}

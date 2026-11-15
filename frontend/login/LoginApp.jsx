@@ -228,9 +228,9 @@ export default function LoginApp() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="Enter full name"
+                placeholder="Enter full name (letters only)"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''))}
                 required
               />
             </div>
@@ -253,8 +253,9 @@ export default function LoginApp() {
                 type="tel"
                 className="form-input"
                 placeholder="10-digit mobile number"
+                maxLength={10}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
                 required
               />
             </div>

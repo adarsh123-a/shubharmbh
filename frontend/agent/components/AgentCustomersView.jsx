@@ -2,51 +2,8 @@ import React, { useState, useEffect } from 'react';
 import AgentAddPropertyModal from './AgentAddPropertyModal.jsx';
 import { agentService } from '../services/agentService.js';
 
-const INITIAL_LEADS = [
-  {
-    id: 'lead-1',
-    name: 'Rahul Sharma',
-    email: 'rahul@example.com',
-    phone: '+917275004901',
-    status: 'Site Visit Scheduled',
-    statusBg: '#FEF3C7',
-    statusColor: '#D97706',
-    date: '28 Oct 2026',
-  },
-  {
-    id: 'lead-2',
-    name: 'Priyanka Saxena',
-    email: 'priyanka@example.com',
-    phone: '+917275004901',
-    status: 'Call Done / Contacted',
-    statusBg: '#DBEAFE',
-    statusColor: '#2563EB',
-    date: '27 Oct 2026',
-  },
-  {
-    id: 'lead-3',
-    name: 'Suresh Chandra',
-    email: 'suresh@example.com',
-    phone: '+917275004901',
-    status: 'Plot Booked',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-    date: '26 Oct 2026',
-  },
-  {
-    id: 'lead-4',
-    name: 'Neelam Tiwari',
-    email: 'neelam@example.com',
-    phone: '+917275004901',
-    status: 'New Lead',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-    date: '25 Oct 2026',
-  },
-];
-
 export default function AgentCustomersView() {
-  const [customers, setCustomers] = useState(INITIAL_LEADS);
+  const [customers, setCustomers] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [notice, setNotice] = useState('');
@@ -177,7 +134,14 @@ export default function AgentCustomersView() {
 
       {/* Customer List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
-        {filtered.map((cust) => (
+        {filtered.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>📋</div>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1E293B', margin: '0 0 4px' }}>No Customer Leads Yet</h4>
+            <p style={{ fontSize: '12px', margin: 0 }}>Click "+ Add Lead" to register a prospective plot buyer.</p>
+          </div>
+        ) : (
+          filtered.map((cust) => (
           <div
             key={cust.id}
             style={{
@@ -255,7 +219,7 @@ export default function AgentCustomersView() {
               </a>
             </div>
           </div>
-        ))}
+        )))}
       </div>
 
       {/* Add Lead Modal (Strictly Name, Email, Phone) */}

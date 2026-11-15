@@ -94,9 +94,9 @@ export default function CustomerApp() {
             <div className="dashboard-summary-grid">
               <article className="dashboard-summary-card booking-summary">
                 <div className="dashboard-summary-content">
-                  <strong className="dashboard-summary-value">1</strong>
+                  <strong className="dashboard-summary-value">0</strong>
                   <span className="dashboard-summary-label">My Bookings</span>
-                  <span className="dashboard-summary-status">1 Confirmed</span>
+                  <span className="dashboard-summary-status">0 Confirmed</span>
                 </div>
                 <a className="dashboard-more-link" href="#dashboard-bookings">
                   More info <span aria-hidden="true">↗</span>
@@ -104,9 +104,9 @@ export default function CustomerApp() {
               </article>
               <article className="dashboard-summary-card query-summary">
                 <div className="dashboard-summary-content">
-                  <strong className="dashboard-summary-value">3</strong>
+                  <strong className="dashboard-summary-value">0</strong>
                   <span className="dashboard-summary-label">My Queries</span>
-                  <span className="dashboard-summary-status">Across 3 properties</span>
+                  <span className="dashboard-summary-status">No active queries</span>
                 </div>
                 <a className="dashboard-more-link" href="#dashboard-queries">
                   More info <span aria-hidden="true">↗</span>
@@ -114,9 +114,9 @@ export default function CustomerApp() {
               </article>
               <article className="dashboard-summary-card visit-summary">
                 <div className="dashboard-summary-content">
-                  <strong className="dashboard-summary-value">1</strong>
+                  <strong className="dashboard-summary-value">0</strong>
                   <span className="dashboard-summary-label">Site Visits</span>
-                  <span className="dashboard-summary-status">Visit requested</span>
+                  <span className="dashboard-summary-status">0 Scheduled</span>
                 </div>
                 <a className="dashboard-more-link" href="#dashboard-queries">
                   More info <span aria-hidden="true">↗</span>
@@ -439,22 +439,26 @@ export default function CustomerApp() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '9px', marginBottom: '14px' }}>
                   <input
                     type="text"
-                    placeholder="Your Name"
-                    defaultValue="Satyam Patel"
+                    placeholder="Your Name (letters only)"
                     required
+                    onChange={(e) => {
+                      e.target.value = e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, '');
+                    }}
                     style={{ padding: '10.5px 13px', borderRadius: '11px', border: '1px solid #E5E7EB', fontSize: '13px', outline: 'none' }}
                   />
                   <input
                     type="tel"
-                    placeholder="Mobile Number"
-                    defaultValue="+91 7275004901"
+                    placeholder="10-digit Mobile Number"
+                    maxLength={10}
                     required
+                    onChange={(e) => {
+                      e.target.value = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    }}
                     style={{ padding: '10.5px 13px', borderRadius: '11px', border: '1px solid #E5E7EB', fontSize: '13px', outline: 'none' }}
                   />
                   <input
                     type="text"
-                    placeholder="Property Type & Location (e.g. 3 BHK in Gomti Nagar)"
-                    defaultValue="Residential Property in Lucknow"
+                    placeholder="Property Type & Location (e.g. Plot in Chakeri)"
                     required
                     style={{ padding: '10.5px 13px', borderRadius: '11px', border: '1px solid #E5E7EB', fontSize: '13px', outline: 'none' }}
                   />

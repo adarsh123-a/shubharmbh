@@ -2,61 +2,8 @@ import React, { useState, useEffect } from 'react';
 import SuperAdminAddUserModal from './SuperAdminAddUserModal.jsx';
 import { superAdminService } from '../services/superAdminService.js';
 
-const USER_ROLES_DATA = [
-  {
-    id: 'u-1',
-    name: 'Vikramaditya Rao',
-    role: 'Admin',
-    department: 'Lucknow Central Branch Operations',
-    status: 'Active',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-    email: 'admin.lko@eformx.com',
-  },
-  {
-    id: 'u-2',
-    name: 'Ayush Srivastava',
-    role: 'Relationship Manager',
-    department: 'Gomti Nagar Region',
-    status: 'Active',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-    email: 'ayush.rm@eformx.com',
-  },
-  {
-    id: 'u-3',
-    name: 'Rishabh Tripathi',
-    role: 'Agent',
-    department: 'Independent Residential Specialist',
-    status: 'Verified',
-    statusBg: '#FEF3C7',
-    statusColor: '#D97706',
-    email: 'rishabh.agent@eformx.com',
-  },
-  {
-    id: 'u-4',
-    name: 'Pooja Verma',
-    role: 'Relationship Manager',
-    department: 'Key Accounts & Luxury Villas',
-    status: 'Active',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-    email: 'pooja.rm@eformx.com',
-  },
-  {
-    id: 'u-5',
-    name: 'Suresh Chandra',
-    role: 'Customer',
-    department: 'Commercial Buyer Account',
-    status: 'Active',
-    statusBg: '#DCFCE7',
-    statusColor: '#16A34A',
-    email: 'suresh.client@eformx.com',
-  },
-];
-
 export default function SuperAdminUsersView() {
-  const [usersList, setUsersList] = useState(USER_ROLES_DATA);
+  const [usersList, setUsersList] = useState([]);
   const [roleFilter, setRoleFilter] = useState('all');
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [notice, setNotice] = useState('');
@@ -216,11 +163,11 @@ export default function SuperAdminUsersView() {
       {/* Role Tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', overflowX: 'auto', paddingBottom: '2px' }}>
         {[
-          { id: 'all', label: 'All (458)' },
-          { id: 'admin', label: 'Admins (24)' },
-          { id: 'relationship manager', label: 'RMs (18)' },
-          { id: 'agent', label: 'Agents (320)' },
-          { id: 'customer', label: 'Customers (96)' },
+          { id: 'all', label: `All (${usersList.length})` },
+          { id: 'admin', label: `Admins (${adminCount})` },
+          { id: 'rm', label: `RMs (${rmCount})` },
+          { id: 'agent', label: `Agents (${agentCount})` },
+          { id: 'customer', label: `Customers (${custCount})` },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -246,7 +193,14 @@ export default function SuperAdminUsersView() {
 
       {/* User Cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        {filtered.map((user) => (
+        {filtered.length === 0 ? (
+          <div style={{ padding: '36px 16px', textAlign: 'center', backgroundColor: '#FFFFFF', borderRadius: '16px', border: '1px solid #E2E8F0', color: '#64748B' }}>
+            <div style={{ fontSize: '28px', marginBottom: '8px' }}>👥</div>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#1E293B', margin: '0 0 4px' }}>No Users Found</h4>
+            <p style={{ fontSize: '12px', margin: 0 }}>Click "+ Add Account" to onboard new platform users.</p>
+          </div>
+        ) : (
+          filtered.map((user) => (
           <div
             key={user.id}
             style={{
@@ -304,7 +258,7 @@ export default function SuperAdminUsersView() {
               {user.status === 'Active' ? 'Active • Manage' : 'Suspended'}
             </button>
           </div>
-        ))}
+        )))}
       </div>
 
       <SuperAdminAddUserModal

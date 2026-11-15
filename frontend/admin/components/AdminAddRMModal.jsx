@@ -118,10 +118,10 @@ export default function AdminAddRMModal({ isOpen, onClose, onAddRM }) {
               <input
                 type="text"
                 className="admin-form-input"
-                placeholder="e.g. Shalini Verma"
+                placeholder="e.g. Shalini Verma (letters only)"
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setName(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''));
                   if (error) setError('');
                 }}
                 required
@@ -134,10 +134,11 @@ export default function AdminAddRMModal({ isOpen, onClose, onAddRM }) {
                 <input
                   type="tel"
                   className="admin-form-input"
-                  placeholder="e.g. 7275004901"
+                  placeholder="e.g. 7275004901 (10 digits)"
+                  maxLength={10}
                   value={phone}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                     if (error) setError('');
                   }}
                   required

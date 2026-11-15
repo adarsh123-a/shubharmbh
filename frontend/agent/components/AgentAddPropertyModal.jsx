@@ -120,10 +120,10 @@ export default function AgentAddPropertyModal({ isOpen, onClose, onAddLead = () 
               <input
                 type="text"
                 className="agent-form-input"
-                placeholder="e.g. Ramesh Kumar"
+                placeholder="e.g. Ramesh Kumar (letters only)"
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setName(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''));
                   if (error) setError('');
                 }}
                 required
@@ -146,10 +146,11 @@ export default function AgentAddPropertyModal({ isOpen, onClose, onAddLead = () 
               <input
                 type="tel"
                 className="agent-form-input"
-                placeholder="e.g. 9876543210"
+                placeholder="e.g. 9876543210 (10 digits)"
+                maxLength={10}
                 value={phone}
                 onChange={(e) => {
-                  setPhone(e.target.value);
+                  setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                   if (error) setError('');
                 }}
                 required

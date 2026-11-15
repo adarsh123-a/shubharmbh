@@ -133,10 +133,10 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
               <input
                 type="text"
                 className="super-admin-form-input"
-                placeholder="e.g. Adarsh Tripathi"
+                placeholder="e.g. Adarsh Tripathi (letters only)"
                 value={name}
                 onChange={(e) => {
-                  setName(e.target.value);
+                  setName(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''));
                   if (error) setError('');
                 }}
                 required
@@ -192,10 +192,11 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
                 <input
                   type="tel"
                   className="super-admin-form-input"
-                  placeholder="e.g. 7275004901"
+                  placeholder="e.g. 7275004901 (10 digits)"
+                  maxLength={10}
                   value={phone}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                     if (error) setError('');
                   }}
                   required

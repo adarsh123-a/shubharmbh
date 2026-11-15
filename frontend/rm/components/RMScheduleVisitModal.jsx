@@ -92,10 +92,10 @@ export default function RMScheduleVisitModal({ isOpen, onClose, onScheduleVisit 
               <input
                 type="text"
                 className="rm-form-input"
-                placeholder="e.g. Dr. Rajesh Sharma"
+                placeholder="e.g. Rajesh Sharma (letters only)"
                 value={client}
                 onChange={(e) => {
-                  setClient(e.target.value);
+                  setClient(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''));
                   if (error) setError('');
                 }}
                 required
@@ -108,10 +108,11 @@ export default function RMScheduleVisitModal({ isOpen, onClose, onScheduleVisit 
                 <input
                   type="tel"
                   className="rm-form-input"
-                  placeholder="e.g. 7275004901"
+                  placeholder="e.g. 7275004901 (10 digits)"
+                  maxLength={10}
                   value={phone}
                   onChange={(e) => {
-                    setPhone(e.target.value);
+                    setPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
                     if (error) setError('');
                   }}
                   required
