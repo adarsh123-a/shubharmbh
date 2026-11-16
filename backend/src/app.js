@@ -24,7 +24,11 @@ const allowedOrigins = [
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'https://shubharambhrealty.eformx.com',
-  'https://eformx.com'
+  'https://eformx.com',
+  'https://shubharambhrealty.com',
+  'https://www.shubharambhrealty.com',
+  'https://shubharambhrealty.in',
+  'https://www.shubharambhrealty.in'
 ].filter(Boolean);
 
 app.use(
@@ -35,7 +39,8 @@ app.use(
         !origin ||
         allowedOrigins.includes(origin) ||
         origin.endsWith('.vercel.app') ||
-        origin.includes('localhost')
+        origin.includes('localhost') ||
+        origin.includes('shubharambhrealty')
       ) {
         return callback(null, true);
       }

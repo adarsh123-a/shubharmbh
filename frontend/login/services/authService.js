@@ -1,4 +1,13 @@
-const API_URL = import.meta.env?.VITE_API_URL || 'https://shubharmbh.onrender.com/api/auth';
+const getAuthApiUrl = () => {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname.endsWith('.vercel.app')) {
+      return '/api/auth';
+    }
+  }
+  return import.meta.env?.VITE_API_URL || 'https://shubharmbh.onrender.com/api/auth';
+};
+
+const API_URL = getAuthApiUrl();
 
 export const authService = {
   async register(data) {
@@ -31,8 +40,10 @@ export const authService = {
         (cleanId === 'superadmin@shubharambhrealty.com' || cleanId === '7275004901') &&
         password === '12345'
       ) {
+        const fallbackToken = 'sa_session_' + btoa(JSON.stringify({ role: 'super_admin', email: 'superadmin@shubharambhrealty.com', ts: Date.now() }));
         return {
           success: true,
+          token: fallbackToken,
           user: {
             name: 'Super Admin',
             email: 'superadmin@shubharambhrealty.com',
