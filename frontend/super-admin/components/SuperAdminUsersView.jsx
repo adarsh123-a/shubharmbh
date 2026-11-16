@@ -8,40 +8,41 @@ export default function SuperAdminUsersView() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [notice, setNotice] = useState('');
 
-  // Fetch real users from backend on mount
-  useEffect(() => {
-    let isMounted = true;
-    superAdminService.getUsers().then((data) => {
-      if (isMounted && Array.isArray(data) && data.length > 0) {
-        const formatted = data.map((u) => {
-          const roleDisplayName =
-            u.role === 'super_admin'
-              ? 'Super Admin'
-              : u.role === 'admin'
-              ? 'Admin'
-              : u.role === 'rm'
-              ? 'RM'
-              : u.role === 'agent'
-              ? 'Agent'
-              : 'Customer';
+  const formatUser = (u) => {
+    const roleDisplayName =
+      u.role === 'super_admin'
+        ? 'Super Admin'
+        : u.role === 'admin'
+        ? 'Admin'
+        : u.role === 'rm'
+        ? 'RM'
+        : u.role === 'agent'
+        ? 'Agent'
+        : 'Customer';
 
-          return {
-            id: u._id,
-            name: u.name,
-            role: roleDisplayName,
-            department: u.phone ? `📞 ${u.phone}` : 'Shubharambh Platform',
-            status: u.isActive ? 'Active' : 'Suspended',
-            statusBg: u.isActive ? '#DCFCE7' : '#F1F5F9',
-            statusColor: u.isActive ? '#16A34A' : '#64748B',
-            email: u.email,
-          };
-        });
-        setUsersList(formatted);
+    return {
+      id: u._id || u.id,
+      name: u.name,
+      role: roleDisplayName,
+      department: u.phone ? `📞 ${u.phone}` : 'Shubharambh Platform',
+      status: u.isActive !== false ? 'Active' : 'Suspended',
+      statusBg: u.isActive !== false ? '#DCFCE7' : '#F1F5F9',
+      statusColor: u.isActive !== false ? '#16A34A' : '#64748B',
+      email: u.email,
+    };
+  };
+
+  const loadUsers = () => {
+    superAdminService.getUsers().then((data) => {
+      if (Array.isArray(data)) {
+        setUsersList(data.map(formatUser));
       }
     });
-    return () => {
-      isMounted = false;
-    };
+  };
+
+  // Fetch real users from backend on mount
+  useEffect(() => {
+    loadUsers();
   }, []);
 
   const adminCount = usersList.filter((u) => u.role === 'Admin').length;
@@ -54,10 +55,12 @@ export default function SuperAdminUsersView() {
     return u.role.toLowerCase() === roleFilter.toLowerCase();
   });
 
-  const handleAddUser = (newUser) => {
-    setUsersList((prev) => [newUser, ...prev]);
-    setNotice(`Account for ${newUser.name} (${newUser.role}) provisioned successfully!`);
+  const handleAddUser = (apiUser) => {
+    const formatted = formatUser(apiUser);
+    setUsersList((prev) => [formatted, ...prev]);
+    setNotice(`Account for ${formatted.name} (${formatted.role}) provisioned successfully!`);
     setTimeout(() => setNotice(''), 4000);
+    loadUsers();
   };
 
   const handleToggleStatus = async (userId) => {
@@ -124,7 +127,7 @@ export default function SuperAdminUsersView() {
             User Hierarchies
           </h2>
           <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-            {usersList.length + 454} Total Enterprise Accounts
+            {usersList.length} Total Enterprise Accounts
           </span>
         </div>
         <button

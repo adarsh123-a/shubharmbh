@@ -1,6 +1,8 @@
 import User, { ROLES } from '../models/User.js';
 import Property from '../models/Property.js';
 import Activity from '../models/Activity.js';
+import Booking from '../models/Booking.js';
+import CustomerLead from '../models/CustomerLead.js';
 
 // Helper to log platform activity
 const logActivity = async ({ actor, actorName, actorRole, action, targetType, details, ipAddress }) => {
@@ -74,7 +76,18 @@ export const getDashboardOverview = async (req, res, next) => {
       }
     });
 
-    // 3. Recent 5 activities
+    // 3. Enquiries, Bookings & Revenue
+    const [totalEnquiries, totalBookings, revenueAggregate] = await Promise.all([
+      CustomerLead.countDocuments({}),
+      Booking.countDocuments({}),
+      Booking.aggregate([
+        { $match: { status: { $in: ['approved', 'registry_done'] } } },
+        { $group: { _id: null, total: { $sum: '$tokenAmount' } } },
+      ]),
+    ]);
+    const totalRevenue = revenueAggregate[0]?.total || 0;
+
+    // 4. Recent 5 activities
     const recentActivities = await Activity.find({})
       .sort({ createdAt: -1 })
       .limit(5)
@@ -90,6 +103,15 @@ export const getDashboardOverview = async (req, res, next) => {
           availablePlots,
           bookedPlots,
           soldPlots,
+        },
+        enquiries: {
+          total: totalEnquiries,
+        },
+        bookings: {
+          total: totalBookings,
+        },
+        financials: {
+          totalRevenue,
         },
         recentActivities,
       },

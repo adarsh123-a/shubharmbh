@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/super-admin.css';
 import SuperAdminHeader from './components/SuperAdminHeader.jsx';
 import SuperAdminBottomNavbar from './components/SuperAdminBottomNavbar.jsx';
@@ -14,6 +14,31 @@ export default function SuperAdminApp({ initialRoute = 'dashboard' }) {
   const [activeRoute, setActiveRoute] = useState(initialRoute);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [isAuthorized, setIsAuthorized] = useState(false);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user_info') || '{}');
+    } catch (e) {
+      user = null;
+    }
+
+    if (!token || user?.role !== 'super_admin') {
+      window.location.href = '/login';
+    } else {
+      setIsAuthorized(true);
+    }
+  }, []);
+
+  if (!isAuthorized) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: '#F8FAFC', color: '#64748B', fontSize: '13px', fontWeight: '600' }}>
+        Verifying Super Admin Authorization...
+      </div>
+    );
+  }
 
   const handleNavigate = (route) => {
     setActiveRoute(route);

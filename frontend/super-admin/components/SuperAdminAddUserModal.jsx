@@ -35,7 +35,13 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
       Customer: 'customer',
     };
 
-    const cleanPhone = phone.trim().replace(/^\+91/, '');
+    const cleanDigits = phone.replace(/\D/g, '');
+    const cleanPhone = cleanDigits.length >= 10 ? cleanDigits.slice(-10) : cleanDigits;
+    if (cleanPhone.length !== 10) {
+      setError('Please provide a valid 10-digit mobile number');
+      return;
+    }
+
     const payload = {
       name: name.trim(),
       email: email.trim().toLowerCase(),
@@ -45,51 +51,26 @@ export default function SuperAdminAddUserModal({ isOpen, onClose, onAddUser }) {
     };
 
     setIsSubmitting(true);
-    let createdId = `usr-${Date.now()}`;
+    setError('');
 
     try {
       const apiUser = await superAdminService.createUser(payload);
-      if (apiUser && apiUser._id) {
-        createdId = apiUser._id;
+      if (!apiUser) {
+        throw new Error('Failed to create user on server');
       }
+      onAddUser(apiUser);
+      setName('');
+      setEmail('');
+      setPhone('');
+      setPassword('12345');
+      setError('');
+      setIsSubmitting(false);
+      onClose();
     } catch (err) {
-      console.warn('API user creation fallback:', err.message);
-      // If duplicate or validation error, display it
-      if (err.message && (err.message.includes('already registered') || err.message.includes('required'))) {
-        setError(err.message);
-        setIsSubmitting(false);
-        return;
-      }
+      console.error('API user creation error:', err);
+      setError(err.message || 'User create nahi ho saka. Kripya details check karein.');
+      setIsSubmitting(false);
     }
-
-    const roleColors = {
-      Admin: { bg: '#F3E8FF', color: '#9333EA' },
-      RM: { bg: '#E0F2FE', color: '#0284C7' },
-      Agent: { bg: '#FFE4E6', color: '#E11D48' },
-      Customer: { bg: '#FFEDD5', color: '#EA580C' },
-    };
-
-    const newUser = {
-      id: createdId,
-      name: name.trim(),
-      email: email.trim(),
-      phone: `+91 ${cleanPhone}`,
-      role: role,
-      roleBg: roleColors[role]?.bg || '#E0F2FE',
-      roleColor: roleColors[role]?.color || '#0284C7',
-      status: status,
-      statusBg: status === 'Active' ? '#DCFCE7' : '#F1F5F9',
-      statusColor: status === 'Active' ? '#16A34A' : '#64748B',
-    };
-
-    onAddUser(newUser);
-    setName('');
-    setEmail('');
-    setPhone('');
-    setPassword('12345');
-    setError('');
-    setIsSubmitting(false);
-    onClose();
   };
 
   return (

@@ -5,8 +5,8 @@ const SA_KPIS = [
   {
     id: 'properties',
     label: 'Total Properties',
-    value: '128',
-    trend: '↑ 12%',
+    value: '0',
+    trend: null,
     bgTint: '#E0F2FE',
     iconColor: '#0284C7',
     route: 'properties',
@@ -20,8 +20,8 @@ const SA_KPIS = [
   {
     id: 'enquiries',
     label: 'Total Enquiries',
-    value: '342',
-    trend: '↑ 18%',
+    value: '0',
+    trend: null,
     bgTint: '#DCFCE7',
     iconColor: '#16A34A',
     route: null,
@@ -35,8 +35,8 @@ const SA_KPIS = [
   {
     id: 'customers',
     label: 'Total Customers',
-    value: '96',
-    trend: '↑ 8%',
+    value: '0',
+    trend: null,
     bgTint: '#FFEDD5',
     iconColor: '#EA580C',
     route: 'users',
@@ -50,7 +50,7 @@ const SA_KPIS = [
   {
     id: 'admins',
     label: 'Total Admins',
-    value: '24',
+    value: '0',
     trend: null,
     bgTint: '#F3E8FF',
     iconColor: '#9333EA',
@@ -65,7 +65,7 @@ const SA_KPIS = [
   {
     id: 'rms',
     label: 'Total RMs',
-    value: '18',
+    value: '0',
     trend: null,
     bgTint: '#E0F2FE',
     iconColor: '#0284C7',
@@ -80,7 +80,7 @@ const SA_KPIS = [
   {
     id: 'agents',
     label: 'Total Agents',
-    value: '320',
+    value: '0',
     trend: null,
     bgTint: '#FFE4E6',
     iconColor: '#E11D48',
@@ -95,8 +95,8 @@ const SA_KPIS = [
   {
     id: 'revenue',
     label: 'Total Revenue',
-    value: '₹ 18.5 L',
-    trend: '↑ 15%',
+    value: '₹ 0',
+    trend: null,
     bgTint: '#FEF3C7',
     iconColor: '#D97706',
     route: 'more',
@@ -112,8 +112,8 @@ const SA_KPIS = [
   {
     id: 'bookings',
     label: 'Total Bookings',
-    value: '428',
-    trend: '↑ 22%',
+    value: '0',
+    trend: null,
     bgTint: '#FCE7F3',
     iconColor: '#DB2777',
     route: 'properties',
@@ -154,7 +154,14 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
     if (id === 'rms') return String(dashboardData.users?.rm ?? fallback);
     if (id === 'agents') return String(dashboardData.users?.agent ?? fallback);
     if (id === 'customers') return String(dashboardData.users?.customer ?? fallback);
-    if (id === 'enquiries') return String(dashboardData.inventory?.availablePlots ?? fallback);
+    if (id === 'enquiries') return String(dashboardData.enquiries?.total ?? fallback);
+    if (id === 'bookings') return String(dashboardData.bookings?.total ?? fallback);
+    if (id === 'revenue') {
+      const rev = dashboardData.financials?.totalRevenue ?? 0;
+      if (rev >= 10000000) return `₹ ${(rev / 10000000).toFixed(2)} Cr`;
+      if (rev >= 100000) return `₹ ${(rev / 100000).toFixed(2)} L`;
+      return `₹ ${rev.toLocaleString('en-IN')}`;
+    }
     return fallback;
   };
 
@@ -304,7 +311,7 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
         ))}
       </div>
 
-      {/* 3. Enquiries Overview Chart (Royal Blue theme) */}
+      {/* 3. Enquiries Overview */}
       <div style={{ marginBottom: '22px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', padding: '0 2px' }}>
           <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
@@ -322,13 +329,9 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
               fontSize: '11px',
               fontWeight: '600',
               color: '#334155',
-              cursor: 'pointer',
             }}
           >
-            <span>Last 30 Days</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <span>Live Registry</span>
           </div>
         </div>
 
@@ -336,171 +339,172 @@ export default function SuperAdminDashboardView({ onNavigate = () => {} }) {
           style={{
             backgroundColor: '#FFFFFF',
             borderRadius: '16px',
-            padding: '14px 10px 10px',
+            padding: '18px 14px',
             border: '1px solid #E2E8F0',
             boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
-            position: 'relative',
           }}
         >
-          {/* Tooltip Card for Peak at 18 Oct */}
-          <div
-            style={{
-              position: 'absolute',
-              top: '12px',
-              left: '52%',
-              transform: 'translateX(-50%)',
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E2E8F0',
-              borderRadius: '8px',
-              padding: '4px 8px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)',
-              textAlign: 'center',
-              zIndex: 3,
-            }}
-          >
-            <div style={{ fontSize: '11px', fontWeight: '800', color: '#0F172A', lineHeight: 1.1 }}>
-              28 Enquiries
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+            <div style={{ textAlign: 'left' }}>
+              <div style={{ fontSize: '22px', fontWeight: '800', color: '#0F172A', lineHeight: 1 }}>
+                {dashboardData?.enquiries?.total ?? 0}
+              </div>
+              <div style={{ fontSize: '11.5px', color: '#64748B', fontWeight: '600', marginTop: '4px' }}>
+                Total Active Enquiries & Leads
+              </div>
             </div>
-            <div style={{ fontSize: '9px', color: '#64748B', marginTop: '1px' }}>
-              18 Oct 2026
+            <div
+              style={{
+                padding: '6px 12px',
+                borderRadius: '8px',
+                backgroundColor: '#DCFCE7',
+                color: '#16A34A',
+                fontSize: '11.5px',
+                fontWeight: '700',
+              }}
+            >
+              Sync Active
             </div>
           </div>
 
-          {/* SVG Area Chart (Royal Blue theme matching screenshot) */}
-          <svg viewBox="0 0 320 140" style={{ width: '100%', height: 'auto', display: 'block' }}>
-            <defs>
-              <linearGradient id="superAdminChartGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#2563EB" stopOpacity="0.25" />
-                <stop offset="100%" stopColor="#2563EB" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
-
-            {/* Grid Lines */}
-            <line x1="30" y1="20" x2="310" y2="20" stroke="#F1F5F9" strokeWidth="1" />
-            <line x1="30" y1="50" x2="310" y2="50" stroke="#F1F5F9" strokeWidth="1" />
-            <line x1="30" y1="80" x2="310" y2="80" stroke="#F1F5F9" strokeWidth="1" />
-            <line x1="30" y1="110" x2="310" y2="110" stroke="#F1F5F9" strokeWidth="1" />
-
-            {/* Y Axis Labels */}
-            <text x="18" y="23" fontSize="9" fill="#94A3B8" textAnchor="end">40</text>
-            <text x="18" y="53" fontSize="9" fill="#94A3B8" textAnchor="end">30</text>
-            <text x="18" y="83" fontSize="9" fill="#94A3B8" textAnchor="end">20</text>
-            <text x="18" y="113" fontSize="9" fill="#94A3B8" textAnchor="end">10</text>
-            <text x="18" y="128" fontSize="9" fill="#94A3B8" textAnchor="end">0</text>
-
-            {/* Area Fill */}
-            <path
-              d="M 35 110 L 35 112 L 65 96 L 95 82 L 120 102 L 140 92 L 165 60 L 190 76 L 220 104 L 250 86 L 285 102 L 310 82 L 310 125 L 35 125 Z"
-              fill="url(#superAdminChartGrad)"
-            />
-
-            {/* Blue Trend Line */}
-            <path
-              d="M 35 112 L 65 96 L 95 82 L 120 102 L 140 92 L 165 60 L 190 76 L 220 104 L 250 86 L 285 102 L 310 82"
-              fill="none"
-              stroke="#2563EB"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-
-            {/* Data Circles */}
-            {[
-              [35, 112],
-              [65, 96],
-              [95, 82],
-              [120, 102],
-              [140, 92],
-              [165, 60],
-              [190, 76],
-              [220, 104],
-              [250, 86],
-              [285, 102],
-              [310, 82],
-            ].map(([cx, cy], i) => (
-              <circle key={i} cx={cx} cy={cy} r={cx === 165 ? "4.5" : "2.8"} fill="#FFFFFF" stroke="#2563EB" strokeWidth={cx === 165 ? "2.5" : "1.8"} />
-            ))}
-
-            {/* X Axis Labels */}
-            <text x="35" y="136" fontSize="8.5" fill="#94A3B8" textAnchor="middle">1 Oct</text>
-            <text x="95" y="136" fontSize="8.5" fill="#94A3B8" textAnchor="middle">8 Oct</text>
-            <text x="165" y="136" fontSize="8.5" fill="#94A3B8" textAnchor="middle">15 Oct</text>
-            <text x="235" y="136" fontSize="8.5" fill="#94A3B8" textAnchor="middle">22 Oct</text>
-            <text x="305" y="136" fontSize="8.5" fill="#94A3B8" textAnchor="middle">31 Oct</text>
-          </svg>
+          <div
+            style={{
+              padding: '16px 12px',
+              backgroundColor: '#F8FAFC',
+              borderRadius: '12px',
+              border: '1px dashed #CBD5E1',
+              fontSize: '12px',
+              color: '#64748B',
+              textAlign: 'center',
+            }}
+          >
+            {(dashboardData?.enquiries?.total ?? 0) === 0 ? (
+              <span>No customer enquiries logged yet. New leads will show here automatically.</span>
+            ) : (
+              <span>{dashboardData.enquiries.total} lead(s) currently being tracked across RMs and Agents.</span>
+            )}
+          </div>
         </div>
       </div>
 
       {/* 4. Property Status Donut Breakdown */}
-      <div style={{ marginBottom: '22px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: '0 0 12px', padding: '0 2px' }}>
-          Property Status
-        </h3>
+      {(() => {
+        const totalPlots = dashboardData?.inventory?.totalPlots ?? 0;
+        const availablePlots = dashboardData?.inventory?.availablePlots ?? 0;
+        const bookedPlots = dashboardData?.inventory?.bookedPlots ?? 0;
+        const soldPlots = dashboardData?.inventory?.soldPlots ?? 0;
 
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            borderRadius: '16px',
-            padding: '16px 14px',
-            border: '1px solid #E2E8F0',
-            boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            gap: '16px',
-          }}
-        >
-          {/* Donut Chart with 128 Total in Center */}
-          <div style={{ position: 'relative', width: '110px', height: '110px', flexShrink: 0 }}>
-            <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
-              {/* Draft: 30/128 = 23.4% -> strokeDasharray: 58.8 192.6, strokeDashoffset: 0 */}
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#94A3B8" strokeWidth="13" strokeDasharray="58.8 192.6" strokeDashoffset="0" />
-              {/* Unavailable: 12/128 = 9.4% -> strokeDasharray: 23.6 227.8, strokeDashoffset: -58.8 */}
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#EF4444" strokeWidth="13" strokeDasharray="23.6 227.8" strokeDashoffset="-58.8" />
-              {/* Sold: 18/128 = 14% -> strokeDasharray: 35.3 216.1, strokeDashoffset: -82.4 */}
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#0284C7" strokeWidth="13" strokeDasharray="35.3 216.1" strokeDashoffset="-82.4" />
-              {/* For Sale: 68/128 = 53.1% -> strokeDasharray: 133.5 117.9, strokeDashoffset: -117.7 */}
-              <circle cx="50" cy="50" r="40" fill="none" stroke="#10B981" strokeWidth="13" strokeDasharray="133.5 117.9" strokeDashoffset="-117.7" />
-            </svg>
+        const circ = 251.32; // 2 * Math.PI * 40
+        const availLen = totalPlots > 0 ? (availablePlots / totalPlots) * circ : 0;
+        const bookedLen = totalPlots > 0 ? (bookedPlots / totalPlots) * circ : 0;
+        const soldLen = totalPlots > 0 ? (soldPlots / totalPlots) * circ : 0;
 
-            {/* Center Count */}
+        return (
+          <div style={{ marginBottom: '22px' }}>
+            <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#0F172A', margin: '0 0 12px', padding: '0 2px' }}>
+              Property Status
+            </h3>
+
             <div
               style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                textAlign: 'center',
+                backgroundColor: '#FFFFFF',
+                borderRadius: '16px',
+                padding: '16px 14px',
+                border: '1px solid #E2E8F0',
+                boxShadow: '0 2px 6px rgba(15, 23, 42, 0.04)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '16px',
               }}
             >
-              <div style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', lineHeight: 1 }}>
-                128
+              {/* Donut Chart with Live Total in Center */}
+              <div style={{ position: 'relative', width: '110px', height: '110px', flexShrink: 0 }}>
+                <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%', transform: 'rotate(-90deg)' }}>
+                  {totalPlots === 0 ? (
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#E2E8F0" strokeWidth="12" />
+                  ) : (
+                    <>
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#E2E8F0" strokeWidth="12" />
+                      {availLen > 0 && (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="none"
+                          stroke="#10B981"
+                          strokeWidth="12"
+                          strokeDasharray={`${availLen} ${circ - availLen}`}
+                          strokeDashoffset="0"
+                        />
+                      )}
+                      {bookedLen > 0 && (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="none"
+                          stroke="#F59E0B"
+                          strokeWidth="12"
+                          strokeDasharray={`${bookedLen} ${circ - bookedLen}`}
+                          strokeDashoffset={String(-availLen)}
+                        />
+                      )}
+                      {soldLen > 0 && (
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r="40"
+                          fill="none"
+                          stroke="#0284C7"
+                          strokeWidth="12"
+                          strokeDasharray={`${soldLen} ${circ - soldLen}`}
+                          strokeDashoffset={String(-(availLen + bookedLen))}
+                        />
+                      )}
+                    </>
+                  )}
+                </svg>
+
+                {/* Center Count */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    textAlign: 'center',
+                  }}
+                >
+                  <div style={{ fontSize: '20px', fontWeight: '800', color: '#0F172A', lineHeight: 1 }}>
+                    {totalPlots}
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#64748B', fontWeight: '600', marginTop: '2px' }}>
+                    Total Plots
+                  </div>
+                </div>
               </div>
-              <div style={{ fontSize: '10px', color: '#64748B', fontWeight: '600', marginTop: '2px' }}>
-                Total
+
+              {/* Right Status Breakdown Rows */}
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[
+                  { label: 'Available', count: availablePlots, color: '#10B981' },
+                  { label: 'Booked', count: bookedPlots, color: '#F59E0B' },
+                  { label: 'Sold', count: soldPlots, color: '#0284C7' },
+                ].map((st) => (
+                  <div key={st.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: st.color }} />
+                      <span style={{ fontSize: '12px', fontWeight: '600', color: '#334155' }}>{st.label}</span>
+                    </div>
+                    <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#0F172A' }}>{st.count}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-
-          {/* Right Status Breakdown Rows */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {[
-              { label: 'For Sale', count: 68, color: '#10B981' },
-              { label: 'Sold', count: 18, color: '#0284C7' },
-              { label: 'Unavailable', count: 12, color: '#EF4444' },
-              { label: 'Draft', count: 30, color: '#94A3B8' },
-            ].map((st) => (
-              <div key={st.label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: st.color }} />
-                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#334155' }}>{st.label}</span>
-                </div>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#0F172A' }}>{st.count}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+        );
+      })()}
 
       {/* 5. Recent Properties (Exact Match to Screenshot!) */}
       <div>

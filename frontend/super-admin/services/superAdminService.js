@@ -1,4 +1,15 @@
-const API_BASE = '/api';
+const getApiBase = () => {
+  const envUrl = import.meta.env?.VITE_API_URL;
+  if (envUrl) {
+    return envUrl.replace(/\/auth\/?$/, '');
+  }
+  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+    return '/api';
+  }
+  return 'https://shubharmbh.onrender.com/api';
+};
+
+const API_BASE = getApiBase();
 
 const getAuthHeaders = () => {
   const headers = { 'Content-Type': 'application/json' };
@@ -48,8 +59,14 @@ export const superAdminService = {
       credentials: 'include',
       body: JSON.stringify(userData),
     });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.message || 'Failed to create user');
+    const ct = res.headers.get('content-type');
+    let data = {};
+    if (ct && ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection error (${res.status}): Backend server connect nahi ho saka.`);
+    }
+    if (!res.ok) throw new Error(data.message || 'Failed to create user on server');
     return data.data;
   },
 
@@ -60,7 +77,13 @@ export const superAdminService = {
       credentials: 'include',
       body: JSON.stringify({ isActive }),
     });
-    const data = await res.json();
+    const ct = res.headers.get('content-type');
+    let data = {};
+    if (ct && ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection error (${res.status}): Backend server connect nahi ho saka.`);
+    }
     if (!res.ok) throw new Error(data.message || 'Failed to update user status');
     return data.data;
   },
@@ -71,7 +94,13 @@ export const superAdminService = {
       headers: getAuthHeaders(),
       credentials: 'include',
     });
-    const data = await res.json();
+    const ct = res.headers.get('content-type');
+    let data = {};
+    if (ct && ct.includes('application/json')) {
+      data = await res.json();
+    } else {
+      throw new Error(`Server connection error (${res.status}): Backend server connect nahi ho saka.`);
+    }
     if (!res.ok) throw new Error(data.message || 'Failed to delete user');
     return data;
   },
