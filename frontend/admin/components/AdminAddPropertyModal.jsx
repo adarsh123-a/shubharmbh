@@ -5,6 +5,7 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
   const [title, setTitle] = useState('');
   const [landId, setLandId] = useState('');
   const [location, setLocation] = useState('चकेरी, कानपुर');
+  const [totalPlots, setTotalPlots] = useState('20');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [price, setPrice] = useState('');
@@ -30,7 +31,38 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
       return;
     }
 
+    const numPlots = totalPlots !== '' ? parseInt(totalPlots.trim(), 10) : 20;
+    const validCount = isNaN(numPlots) || numPlots < 0 ? 20 : numPlots;
     const landNum = parseInt(landId.trim(), 10) || Math.floor((Date.now() % 900) + 10);
+
+    const baseRate = parseInt(String(price || '').replace(/[^0-9]/g, ''), 10) || 4500;
+    const plotConfigs = [
+      { area: 100, unit: 'गज' },
+      { area: 120, unit: 'गज' },
+      { area: 150, unit: 'गज' },
+      { area: 180, unit: 'गज' },
+      { area: 200, unit: 'गज' },
+      { area: 250, unit: 'गज' },
+      { area: 900, unit: 'वर्ग फुट' },
+      { area: 1200, unit: 'वर्ग फुट' },
+    ];
+
+    const generatedPlots = [];
+    for (let i = 1; i <= validCount; i++) {
+      const cfg = plotConfigs[(i - 1) % plotConfigs.length];
+      const plotPrice = String(cfg.area * baseRate);
+      generatedPlots.push({
+        id: i,
+        land_id: landNum,
+        plot_id: `L${landNum}-PLOT-${String(i).padStart(3, '0')}`,
+        price: plotPrice,
+        area: String(cfg.area),
+        land_unit: cfg.unit,
+        status: status === 'Sold' ? 'sold' : 'available',
+        booking_id: null,
+      });
+    }
+
     const payload = {
       land: landNum,
       side_name: title.trim(),
@@ -38,7 +70,8 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
       price: price.trim() || '₹ 4,500 / गज',
       lat: latitude.trim() || '26.4095280',
       lng: longitude.trim() || '80.3894150',
-      plots: [],
+      plots: generatedPlots,
+      totalPlots: validCount,
     };
 
     setIsSubmitting(true);
@@ -60,6 +93,7 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
       'Draft': { bg: '#F1F5F9', color: '#64748B' },
     };
 
+    const finalPlotCount = validCount;
     const newProperty = {
       id: `land-${landNum}`,
       landId: String(landNum),
@@ -67,19 +101,21 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
       location: location.trim(),
       latitude: latitude.trim() || '26.4095280',
       longitude: longitude.trim() || '80.3894150',
-      specs: specs.trim() || 'Verified Land Plots • Registry Ready',
+      specs: specs.trim() || `${finalPlotCount} Plots • 100 to 500 गज • Clear Title`,
       price: formattedPrice,
       status: status,
       statusBg: statusMap[status]?.bg || '#DCFCE7',
       statusColor: statusMap[status]?.color || '#16A34A',
-      totalPlots: 50,
-      availablePlots: status === 'Sold' ? 0 : 38,
+      totalPlots: finalPlotCount,
+      availablePlots: status === 'Sold' ? 0 : finalPlotCount,
+      plots: generatedPlots,
     };
 
     onAddProperty(newProperty);
     setTitle('');
     setLandId('');
     setPrice('');
+    setTotalPlots('20');
     setSpecs('');
     setLatitude('');
     setLongitude('');
@@ -167,7 +203,9 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
                   required
                 />
               </div>
+            </div>
 
+            <div className="admin-form-row">
               <div className="admin-form-group">
                 <label className="admin-form-label">Status</label>
                 <select
@@ -179,6 +217,19 @@ export default function AdminAddPropertyModal({ isOpen, onClose, onAddProperty }
                   <option value="Draft">Draft (Review)</option>
                   <option value="Sold">Sold</option>
                 </select>
+              </div>
+
+              <div className="admin-form-group">
+                <label className="admin-form-label">Total Plots Count *</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="admin-form-input"
+                  placeholder="e.g. 20 (Total plots to generate)"
+                  value={totalPlots}
+                  onChange={(e) => setTotalPlots(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
               </div>
             </div>
 

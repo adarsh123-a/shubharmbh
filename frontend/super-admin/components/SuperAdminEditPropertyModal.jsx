@@ -4,6 +4,7 @@ import { superAdminService } from '../services/superAdminService.js';
 export default function SuperAdminEditPropertyModal({ isOpen, onClose, property, onUpdateProperty }) {
   const [title, setTitle] = useState('');
   const [location, setLocation] = useState('');
+  const [totalPlots, setTotalPlots] = useState('20');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [price, setPrice] = useState('');
@@ -16,6 +17,7 @@ export default function SuperAdminEditPropertyModal({ isOpen, onClose, property,
     if (property) {
       setTitle(property.title || '');
       setLocation(property.location || '');
+      setTotalPlots(String(property.totalPlots ?? property.availablePlots ?? 20));
       setLatitude(property.latitude || '');
       setLongitude(property.longitude || '');
       setPrice(property.price || '');
@@ -42,6 +44,38 @@ export default function SuperAdminEditPropertyModal({ isOpen, onClose, property,
       return;
     }
 
+    const numPlots = totalPlots !== '' ? parseInt(totalPlots.trim(), 10) : (property.totalPlots || 20);
+    const validCount = isNaN(numPlots) || numPlots < 0 ? 20 : numPlots;
+    const landNum = Number(property.landId);
+
+    const baseRate = parseInt(String(price || '').replace(/[^0-9]/g, ''), 10) || 4500;
+    const plotConfigs = [
+      { area: 100, unit: 'गज' },
+      { area: 120, unit: 'गज' },
+      { area: 150, unit: 'गज' },
+      { area: 180, unit: 'गज' },
+      { area: 200, unit: 'गज' },
+      { area: 250, unit: 'गज' },
+      { area: 900, unit: 'वर्ग फुट' },
+      { area: 1200, unit: 'वर्ग फुट' },
+    ];
+
+    const updatedPlots = [];
+    for (let i = 1; i <= validCount; i++) {
+      const cfg = plotConfigs[(i - 1) % plotConfigs.length];
+      const plotPrice = String(cfg.area * baseRate);
+      updatedPlots.push({
+        id: i,
+        land_id: landNum,
+        plot_id: `L${landNum}-PLOT-${String(i).padStart(3, '0')}`,
+        price: plotPrice,
+        area: String(cfg.area),
+        land_unit: cfg.unit,
+        status: status === 'Sold' ? 'sold' : 'available',
+        booking_id: null,
+      });
+    }
+
     const payload = {
       side_name: title.trim(),
       location: location.trim(),
@@ -49,6 +83,7 @@ export default function SuperAdminEditPropertyModal({ isOpen, onClose, property,
       lat: latitude.trim() || '26.4095280',
       lng: longitude.trim() || '80.3894150',
       status: status === 'For Sale' ? 'true' : (status === 'Sold' ? 'sold' : 'draft'),
+      plots: updatedPlots,
     };
 
     setIsSubmitting(true);
@@ -70,11 +105,14 @@ export default function SuperAdminEditPropertyModal({ isOpen, onClose, property,
       location: location.trim(),
       latitude: latitude.trim() || '26.4095280',
       longitude: longitude.trim() || '80.3894150',
-      specs: specs.trim() || property.specs,
+      specs: specs.trim() || `${validCount} Plots • 100 to 500 गज • Clear Title`,
       price: price.trim(),
       status: status,
       statusBg: statusMap[status]?.bg || '#DCFCE7',
       statusColor: statusMap[status]?.color || '#16A34A',
+      totalPlots: validCount,
+      availablePlots: status === 'Sold' ? 0 : validCount,
+      plots: updatedPlots,
     };
 
     onUpdateProperty(updated);
@@ -160,7 +198,9 @@ export default function SuperAdminEditPropertyModal({ isOpen, onClose, property,
                   required
                 />
               </div>
+            </div>
 
+            <div className="super-admin-form-row">
               <div className="super-admin-form-group">
                 <label className="super-admin-form-label">Status</label>
                 <select
@@ -172,6 +212,19 @@ export default function SuperAdminEditPropertyModal({ isOpen, onClose, property,
                   <option value="Draft">Draft (Review)</option>
                   <option value="Sold">Sold</option>
                 </select>
+              </div>
+
+              <div className="super-admin-form-group">
+                <label className="super-admin-form-label">Total Plots Count *</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="super-admin-form-input"
+                  placeholder="e.g. 20 (Total plots to generate)"
+                  value={totalPlots}
+                  onChange={(e) => setTotalPlots(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
               </div>
             </div>
 

@@ -5,6 +5,7 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
   const [title, setTitle] = useState('');
   const [landId, setLandId] = useState('');
   const [location, setLocation] = useState('चकेरी, कानपुर');
+  const [totalPlots, setTotalPlots] = useState('20');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [price, setPrice] = useState('');
@@ -30,7 +31,38 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
       return;
     }
 
+    const numPlots = totalPlots !== '' ? parseInt(totalPlots.trim(), 10) : 20;
+    const validCount = isNaN(numPlots) || numPlots < 0 ? 20 : numPlots;
     const landNum = parseInt(landId.trim(), 10) || Math.floor((Date.now() % 900) + 10);
+
+    const baseRate = parseInt(String(price || '').replace(/[^0-9]/g, ''), 10) || 4500;
+    const plotConfigs = [
+      { area: 100, unit: 'गज' },
+      { area: 120, unit: 'गज' },
+      { area: 150, unit: 'गज' },
+      { area: 180, unit: 'गज' },
+      { area: 200, unit: 'गज' },
+      { area: 250, unit: 'गज' },
+      { area: 900, unit: 'वर्ग फुट' },
+      { area: 1200, unit: 'वर्ग फुट' },
+    ];
+
+    const generatedPlots = [];
+    for (let i = 1; i <= validCount; i++) {
+      const cfg = plotConfigs[(i - 1) % plotConfigs.length];
+      const plotPrice = String(cfg.area * baseRate);
+      generatedPlots.push({
+        id: i,
+        land_id: landNum,
+        plot_id: `L${landNum}-PLOT-${String(i).padStart(3, '0')}`,
+        price: plotPrice,
+        area: String(cfg.area),
+        land_unit: cfg.unit,
+        status: status === 'Sold' ? 'sold' : 'available',
+        booking_id: null,
+      });
+    }
+
     const payload = {
       land: landNum,
       side_name: title.trim(),
@@ -38,7 +70,8 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
       price: price.trim() || '₹ 4,500 / गज',
       lat: latitude.trim() || '26.4095280',
       lng: longitude.trim() || '80.3894150',
-      plots: [],
+      plots: generatedPlots,
+      totalPlots: validCount,
     };
 
     setIsSubmitting(true);
@@ -54,9 +87,9 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
         'Draft': { bg: '#F1F5F9', color: '#64748B' },
       };
 
-      const finalPlots = Array.isArray(created?.plots) ? created.plots : [];
-      const totalPlotsCount = finalPlots.length || 20;
-      const availCount = status === 'Sold' ? 0 : (finalPlots.length > 0 ? finalPlots.filter((p) => p.status === 'available').length : 20);
+      const finalPlots = Array.isArray(created?.plots) && created.plots.length > 0 ? created.plots : generatedPlots;
+      const totalPlotsCount = finalPlots.length;
+      const availCount = status === 'Sold' ? 0 : finalPlots.filter((p) => (p.status || 'available').toLowerCase() === 'available').length;
 
       const newProperty = {
         id: `land-${created?.land || landNum}`,
@@ -65,19 +98,21 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
         location: created?.location || location.trim(),
         latitude: created?.lat || latitude.trim() || '26.4095280',
         longitude: created?.lng || longitude.trim() || '80.3894150',
-        specs: specs.trim() || `${totalPlotsCount} Plots • Verified Land Plots • Registry Ready`,
+        specs: specs.trim() || `${totalPlotsCount} Plots • 100 to 500 गज • Clear Title`,
         price: created?.price || formattedPrice,
         status: status,
         statusBg: statusMap[status]?.bg || '#DCFCE7',
         statusColor: statusMap[status]?.color || '#16A34A',
         totalPlots: totalPlotsCount,
         availablePlots: availCount,
+        plots: finalPlots,
       };
 
       onAddProperty(newProperty);
       setTitle('');
       setLandId('');
       setPrice('');
+      setTotalPlots('20');
       setSpecs('');
       setLatitude('');
       setLongitude('');
@@ -170,7 +205,9 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
                   required
                 />
               </div>
+            </div>
 
+            <div className="super-admin-form-row">
               <div className="super-admin-form-group">
                 <label className="super-admin-form-label">Status</label>
                 <select
@@ -182,6 +219,19 @@ export default function SuperAdminAddPropertyModal({ isOpen, onClose, onAddPrope
                   <option value="Draft">Draft (Review)</option>
                   <option value="Sold">Sold</option>
                 </select>
+              </div>
+
+              <div className="super-admin-form-group">
+                <label className="super-admin-form-label">Total Plots Count *</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  className="super-admin-form-input"
+                  placeholder="e.g. 20 (Total plots to generate)"
+                  value={totalPlots}
+                  onChange={(e) => setTotalPlots(e.target.value.replace(/\D/g, ''))}
+                  required
+                />
               </div>
             </div>
 

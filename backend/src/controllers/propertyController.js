@@ -84,7 +84,7 @@ export const getPropertyByLand = async (req, res, next) => {
 // POST /api/properties (Add new project)
 export const createProperty = async (req, res, next) => {
   try {
-    const { land, side_name, lat, lng, img, plots, location, price } = req.body;
+    const { land, side_name, lat, lng, img, plots, location, price, totalPlots } = req.body;
     if (!land || !side_name) {
       return res.status(400).json({
         status: false,
@@ -107,31 +107,34 @@ export const createProperty = async (req, res, next) => {
     let finalPlots = plots;
     if (!Array.isArray(finalPlots) || finalPlots.length === 0) {
       finalPlots = [];
-      const baseRate = parseInt(String(price || '').replace(/[^0-9]/g, ''), 10) || 4500;
-      const plotConfigs = [
-        { area: 100, unit: 'गज' },
-        { area: 120, unit: 'गज' },
-        { area: 150, unit: 'गज' },
-        { area: 180, unit: 'गज' },
-        { area: 200, unit: 'गज' },
-        { area: 250, unit: 'गज' },
-        { area: 900, unit: 'वर्ग फुट' },
-        { area: 1200, unit: 'वर्ग फुट' },
-      ];
+      const plotCount = totalPlots !== undefined && totalPlots !== '' ? Math.max(0, parseInt(totalPlots, 10) || 0) : 20;
+      if (plotCount > 0) {
+        const baseRate = parseInt(String(price || '').replace(/[^0-9]/g, ''), 10) || 4500;
+        const plotConfigs = [
+          { area: 100, unit: 'गज' },
+          { area: 120, unit: 'गज' },
+          { area: 150, unit: 'गज' },
+          { area: 180, unit: 'गज' },
+          { area: 200, unit: 'गज' },
+          { area: 250, unit: 'गज' },
+          { area: 900, unit: 'वर्ग फुट' },
+          { area: 1200, unit: 'वर्ग फुट' },
+        ];
 
-      for (let i = 1; i <= 20; i++) {
-        const cfg = plotConfigs[(i - 1) % plotConfigs.length];
-        const plotPrice = String(cfg.area * baseRate);
-        finalPlots.push({
-          id: i,
-          land_id: landNum,
-          plot_id: `L${landNum}-PLOT-${String(i).padStart(3, '0')}`,
-          price: plotPrice,
-          area: String(cfg.area),
-          land_unit: cfg.unit,
-          status: 'available',
-          booking_id: null,
-        });
+        for (let i = 1; i <= plotCount; i++) {
+          const cfg = plotConfigs[(i - 1) % plotConfigs.length];
+          const plotPrice = String(cfg.area * baseRate);
+          finalPlots.push({
+            id: i,
+            land_id: landNum,
+            plot_id: `L${landNum}-PLOT-${String(i).padStart(3, '0')}`,
+            price: plotPrice,
+            area: String(cfg.area),
+            land_unit: cfg.unit,
+            status: 'available',
+            booking_id: null,
+          });
+        }
       }
     }
 
