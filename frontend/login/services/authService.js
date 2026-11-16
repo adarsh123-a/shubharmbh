@@ -1,10 +1,16 @@
 const getAuthApiUrl = () => {
-  if (typeof window !== 'undefined') {
-    if (window.location.hostname === 'localhost' || window.location.hostname.endsWith('.vercel.app')) {
+  let base = (import.meta.env?.VITE_API_BASE || import.meta.env?.VITE_API_URL || '').trim();
+  if (!base) {
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
       return '/api/auth';
     }
+    return 'https://shubharmbh.onrender.com/api/auth';
   }
-  return import.meta.env?.VITE_API_URL || 'https://shubharmbh.onrender.com/api/auth';
+  base = base.replace(/\/auth\/?$/, '').replace(/\/+$/, '');
+  if (!base.endsWith('/api')) {
+    base = `${base}/api`;
+  }
+  return `${base}/auth`;
 };
 
 const API_URL = getAuthApiUrl();

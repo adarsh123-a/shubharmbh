@@ -70,7 +70,7 @@ app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 app.use(cookieParser());
 
 // Base Health Check
-app.get('/api/health', (req, res) => {
+app.get(['/api/health', '/health'], (req, res) => {
   res.status(200).json({
     status: 'healthy',
     service: 'Shubharambh Realty Backend',
@@ -78,13 +78,24 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Mount Routes
+// Mount Routes (Supports both with /api prefix and direct paths)
 app.use('/api/auth', authLimiter, authRoutes);
+app.use('/auth', authLimiter, authRoutes);
+
 app.use('/api/properties', propertyRoutes);
+app.use('/properties', propertyRoutes);
+
 app.use('/api/super-admin', superAdminRoutes);
+app.use('/super-admin', superAdminRoutes);
+
 app.use('/api/admin', adminRoutes);
+app.use('/admin', adminRoutes);
+
 app.use('/api/rm', rmRoutes);
+app.use('/rm', rmRoutes);
+
 app.use('/api/agent', agentRoutes);
+app.use('/agent', agentRoutes);
 
 // 404 Route Catch-all
 app.use('*', (req, res) => {

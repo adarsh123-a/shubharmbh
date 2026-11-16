@@ -1,12 +1,16 @@
 const getApiBase = () => {
-  const envUrl = import.meta.env?.VITE_API_URL;
-  if (envUrl) {
-    return envUrl.replace(/\/auth\/?$/, '');
+  let base = (import.meta.env?.VITE_API_BASE || import.meta.env?.VITE_API_URL || '').trim();
+  if (!base) {
+    if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+      return '/api';
+    }
+    return 'https://shubharmbh.onrender.com/api';
   }
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return '/api';
+  base = base.replace(/\/auth\/?$/, '').replace(/\/+$/, '');
+  if (!base.endsWith('/api')) {
+    base = `${base}/api`;
   }
-  return 'https://shubharmbh.onrender.com/api';
+  return base;
 };
 
 const API_BASE = getApiBase();
