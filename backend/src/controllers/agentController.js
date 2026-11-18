@@ -2,6 +2,8 @@ import CustomerLead from '../models/CustomerLead.js';
 import SiteVisit from '../models/SiteVisit.js';
 import Booking from '../models/Booking.js';
 import Property from '../models/Property.js';
+import User from '../models/User.js';
+import Activity from '../models/Activity.js';
 
 /**
  * GET /api/agent/dashboard
@@ -84,13 +86,26 @@ export const createCustomerLead = async (req, res, next) => {
   try {
     const { name, phone, email, budget, preferredLocation, interestedLand, notes } = req.body;
     const agentId = req.user._id;
-    const rmId = req.user.assignedRM || null;
+    let rmId = req.user.assignedRM || null;
 
     if (!name || !phone) {
       return res.status(400).json({
         success: false,
         message: 'Customer name and phone number are required.',
       });
+    }
+
+    // Ensure RM is assigned so lead reaches RM portal directly
+    if (!rmId) {
+      const agentUser = await User.findById(agentId).select('assignedRM');
+      if (agentUser && agentUser.assignedRM) {
+        rmId = agentUser.assignedRM;
+      } else {
+        const defaultRM = await User.findOne({ role: 'rm', isActive: true });
+        if (defaultRM) {
+          rmId = defaultRM._id;
+        }
+      }
     }
 
     const newLead = await CustomerLead.create({
@@ -105,6 +120,21 @@ export const createCustomerLead = async (req, res, next) => {
       status: 'new',
       notes: notes || '',
     });
+
+    // Record live agent activity
+    try {
+      await Activity.create({
+        actor: agentId,
+        actorName: req.user.name,
+        actorRole: 'agent',
+        action: 'LEAD_CREATED',
+        targetType: 'CUSTOMER_LEAD',
+        details: `Agent ${req.user.name} added new customer lead "${newLead.name}" (${newLead.phone}).`,
+        ipAddress: req.ip || '',
+      });
+    } catch (actErr) {
+      console.error('Failed to log lead creation activity:', actErr.message);
+    }
 
     return res.status(201).json({
       success: true,
@@ -140,6 +170,20 @@ export const updateCustomerLead = async (req, res, next) => {
     if (preferredLocation !== undefined) lead.preferredLocation = preferredLocation;
 
     await lead.save();
+
+    try {
+      await Activity.create({
+        actor: agentId,
+        actorName: req.user.name,
+        actorRole: 'agent',
+        action: 'LEAD_UPDATED',
+        targetType: 'CUSTOMER_LEAD',
+        details: `Agent ${req.user.name} updated customer lead "${lead.name}".`,
+        ipAddress: req.ip || '',
+      });
+    } catch (actErr) {
+      console.error('Failed to log lead update activity:', actErr.message);
+    }
 
     return res.status(200).json({
       success: true,
@@ -215,6 +259,20 @@ export const requestSiteVisit = async (req, res, next) => {
     // Update lead status
     customer.status = 'visit_scheduled';
     await customer.save();
+
+    try {
+      await Activity.create({
+        actor: agentId,
+        actorName: req.user.name,
+        actorRole: 'agent',
+        action: 'VISIT_REQUESTED',
+        targetType: 'SITE_VISIT',
+        details: `Agent ${req.user.name} requested site visit for customer "${customer.name}" at "${siteName}".`,
+        ipAddress: req.ip || '',
+      });
+    } catch (actErr) {
+      console.error('Failed to log visit activity:', actErr.message);
+    }
 
     return res.status(201).json({
       success: true,
@@ -294,6 +352,20 @@ export const createBookingRequest = async (req, res, next) => {
       commissionAmount: totalPrice ? Math.round((Number(totalPrice) * 5) / 100) : 0,
       notes: notes || '',
     });
+
+    try {
+      await Activity.create({
+        actor: agentId,
+        actorName: req.user.name,
+        actorRole: 'agent',
+        action: 'BOOKING_SUBMITTED',
+        targetType: 'PLOT',
+        details: `Agent ${req.user.name} submitted booking request for plot "${plotId}" at "${siteName}".`,
+        ipAddress: req.ip || '',
+      });
+    } catch (actErr) {
+      console.error('Failed to log booking activity:', actErr.message);
+    }
 
     return res.status(201).json({
       success: true,

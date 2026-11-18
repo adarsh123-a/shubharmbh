@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/agent.css';
 import AgentHeader from './components/AgentHeader.jsx';
 import AgentBottomNavbar from './components/AgentBottomNavbar.jsx';
@@ -14,6 +14,19 @@ export default function AgentApp({ initialRoute = 'dashboard' }) {
   const [activeRoute, setActiveRoute] = useState(initialRoute);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user_info') || '{}');
+    } catch {
+      user = null;
+    }
+    if (!token || !user || (user.role !== 'agent' && user.role !== 'rm' && user.role !== 'admin' && user.role !== 'super_admin')) {
+      window.location.href = '/login?role=agent';
+    }
+  }, []);
 
   const handleNavigate = (route) => {
     setActiveRoute(route);

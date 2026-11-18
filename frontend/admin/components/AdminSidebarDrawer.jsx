@@ -6,22 +6,23 @@ const ADMIN_DRAWER_NAV = [
   { id: 'properties', label: 'Properties (86)', icon: '🏢' },
   { id: 'enquiries', label: 'Enquiries (210)', icon: '💬' },
   { id: 'team', label: 'RM Team (12)', icon: '👥' },
+  { id: 'activity', label: 'Activity Tracker', icon: '📋' },
   { id: 'more', label: 'Settings & Profile', icon: '⚙️' },
 ];
 
 const PORTAL_LINKS = [
-  { path: '/', label: 'Customer Portal', role: 'Customer' },
-  { path: '/agent', label: 'Agent Portal', role: 'Agent' },
-  { path: '/rm', label: 'RM Dashboard', role: 'RM' },
+  { path: '/login?role=customer', label: 'Customer Portal', role: 'Customer' },
+  { path: '/login?role=agent', label: 'Agent Portal', role: 'Agent' },
+  { path: '/login?role=rm', label: 'RM Dashboard', role: 'RM' },
   { path: '/admin', label: 'Admin Console', role: 'Admin (Active)' },
-  { path: '/super-admin', label: 'Super Admin', role: 'Super Admin' },
+  { path: '/login?role=super_admin', label: 'Super Admin', role: 'Super Admin' },
 ];
 
 export default function AdminSidebarDrawer({ isOpen, onClose, activeRoute, onNavigate }) {
   if (!isOpen) return null;
 
   const handlePortalSwitch = (path) => {
-    window.location.pathname = path;
+    window.location.href = path;
   };
 
   return (

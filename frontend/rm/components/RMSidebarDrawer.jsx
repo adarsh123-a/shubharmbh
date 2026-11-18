@@ -5,24 +5,25 @@ const RM_DRAWER_NAV = [
   { id: 'dashboard', label: 'RM Dashboard', icon: '📊' },
   { id: 'properties', label: 'Land Inventory & Plots', icon: '🏞️' },
   { id: 'customers', label: 'Customer Portfolio', icon: '👥' },
+  { id: 'activity', label: 'Agent Activity', icon: '⚡' },
   { id: 'visits', label: 'Site Visits', icon: '📍' },
   { id: 'enquiries', label: 'Client Enquiries', icon: '💬' },
   { id: 'more', label: 'Settings & Profile', icon: '⚙️' },
 ];
 
 const PORTAL_LINKS = [
-  { path: '/', label: 'Customer Portal', role: 'Customer' },
-  { path: '/agent', label: 'Agent Portal', role: 'Agent' },
+  { path: '/login?role=customer', label: 'Customer Portal', role: 'Customer' },
+  { path: '/login?role=agent', label: 'Agent Portal', role: 'Agent' },
   { path: '/rm', label: 'RM Dashboard', role: 'RM (Active)' },
-  { path: '/admin', label: 'Admin Console', role: 'Admin' },
-  { path: '/super-admin', label: 'Super Admin', role: 'Super Admin' },
+  { path: '/login?role=admin', label: 'Admin Console', role: 'Admin' },
+  { path: '/login?role=super_admin', label: 'Super Admin', role: 'Super Admin' },
 ];
 
 export default function RMSidebarDrawer({ isOpen, onClose, activeRoute, onNavigate }) {
   if (!isOpen) return null;
 
   const handlePortalSwitch = (path) => {
-    window.location.pathname = path;
+    window.location.href = path;
   };
 
   return (

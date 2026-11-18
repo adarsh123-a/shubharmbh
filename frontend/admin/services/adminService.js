@@ -121,4 +121,20 @@ export const adminService = {
     if (!res.ok) throw new Error(data.message || 'Failed to create property');
     return data.data;
   },
+
+  async getActivities(role) {
+    try {
+      const url = role && role !== 'all' ? `${API_BASE}/admin/activities?role=${role}` : `${API_BASE}/admin/activities`;
+      const res = await fetch(url, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data.data) ? data.data : [];
+    } catch (err) {
+      console.warn('adminService.getActivities fallback:', err.message);
+      return [];
+    }
+  },
 };

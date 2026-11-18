@@ -29,41 +29,25 @@ export const authService = {
   },
 
   async login(identifier, password) {
-    try {
-      const res = await fetch(`${API_URL}/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ identifier, password })
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.message || 'Login failed');
-      return result;
-    } catch (err) {
-      // Offline fallback for default superadmin if backend server is unreachable
-      const cleanId = identifier?.trim().toLowerCase();
-      if (
-        (cleanId === 'superadmin@shubharambhrealty.com' || cleanId === '7275004901') &&
-        password === '12345'
-      ) {
-        const fallbackToken = 'sa_session_' + btoa(JSON.stringify({ role: 'super_admin', email: 'superadmin@shubharambhrealty.com', ts: Date.now() }));
-        return {
-          success: true,
-          token: fallbackToken,
-          user: {
-            name: 'Super Admin',
-            email: 'superadmin@shubharambhrealty.com',
-            role: 'super_admin'
-          }
-        };
-      }
-      throw err;
-    }
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ identifier, password })
+    });
+    const result = await res.json();
+    if (!res.ok) throw new Error(result.message || 'Login failed');
+    return result;
   },
 
   async getMe() {
+    const headers = { 'Content-Type': 'application/json' };
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
     const res = await fetch(`${API_URL}/me`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       credentials: 'include'
     });
     const result = await res.json();

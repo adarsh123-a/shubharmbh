@@ -10,10 +10,10 @@ const SA_DRAWER_NAV = [
 ];
 
 const PORTAL_LINKS = [
-  { path: '/', label: 'Customer Portal', role: 'Customer' },
-  { path: '/agent', label: 'Agent Portal', role: 'Agent' },
-  { path: '/rm', label: 'RM Dashboard', role: 'RM' },
-  { path: '/admin', label: 'Admin Console', role: 'Admin' },
+  { path: '/login?role=customer', label: 'Customer Portal', role: 'Customer' },
+  { path: '/login?role=agent', label: 'Agent Portal', role: 'Agent' },
+  { path: '/login?role=rm', label: 'RM Dashboard', role: 'RM' },
+  { path: '/login?role=admin', label: 'Admin Console', role: 'Admin' },
   { path: '/super-admin', label: 'Super Admin', role: 'Super Admin (Active)' },
 ];
 
@@ -21,7 +21,7 @@ export default function SuperAdminSidebarDrawer({ isOpen, onClose, activeRoute, 
   if (!isOpen) return null;
 
   const handlePortalSwitch = (path) => {
-    window.location.pathname = path;
+    window.location.href = path;
   };
 
   return (

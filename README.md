@@ -162,10 +162,11 @@ All protected endpoints accept authentication via **HTTP-only cookie (`token`)**
 - `POST /api/admin/team/rm` — Onboard a new Relationship Manager (RM)
 - `GET /api/admin/bookings` — Plot bookings awaiting final approval
 - `PATCH /api/admin/bookings/:id/status` — Approve or reject plot token booking
+- `GET /api/admin/activities` — Track RM and Agent activities only
 
 ### 4. RM Desk (`/api/rm`) — *Requires `rm`, `admin`, or `super_admin` role*
 - `GET /api/rm/dashboard` — RM metrics (agent leads, managed agents, site visits, bookings)
-- `GET /api/rm/customers` — Incoming customer leads added by agents
+- `GET /api/rm/customers` — Incoming customer leads added by agents (with direct Call/WhatsApp actions)
 - `PATCH /api/rm/customers/:id` — Update lead status (`contacted`, `visit_scheduled`, `booked`, `lost`) and discussion notes
 - `GET /api/rm/visits` — Scheduled accompanied site visits & cab requests
 - `PATCH /api/rm/visits/:id` — Assign driver/cab and mark visit completed
@@ -173,6 +174,7 @@ All protected endpoints accept authentication via **HTTP-only cookie (`token`)**
 - `POST /api/rm/agents` — Onboard a new agent under RM's team
 - `GET /api/rm/bookings` — Review plot token submissions from agents
 - `PATCH /api/rm/bookings/:id/review` — Forward booking to Admin or reject
+- `GET /api/rm/activities` — Track Agent activities only (lead additions, site visit requests, bookings)
 
 ### 5. Agent Portal (`/api/agent`) — *Requires `agent`, `rm`, `admin`, or `super_admin` role*
 - `GET /api/agent/dashboard` — Personal performance (Properties sold count, commission earned)

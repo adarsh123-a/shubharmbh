@@ -9,6 +9,7 @@ import {
   getRMBookings,
   reviewBooking,
   updateCustomerLead,
+  getRMActivities,
 } from '../controllers/rmController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -36,6 +37,9 @@ router.patch('/visits/:id', updateVisitStatus);
 // Plot Bookings Verification
 router.get('/bookings', getRMBookings);
 router.patch('/bookings/:id/review', reviewBooking);
+
+// Agent Activity Tracking (RM tracks Agent activity only)
+router.get('/activities', getRMActivities);
 
 export default router;
 

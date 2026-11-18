@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/admin.css';
 import AdminHeader from './components/AdminHeader.jsx';
 import AdminBottomNavbar from './components/AdminBottomNavbar.jsx';
@@ -6,6 +6,7 @@ import AdminDashboardView from './components/AdminDashboardView.jsx';
 import AdminPropertiesView from './components/AdminPropertiesView.jsx';
 import AdminEnquiriesView from './components/AdminEnquiriesView.jsx';
 import AdminTeamView from './components/AdminTeamView.jsx';
+import AdminActivityView from './components/AdminActivityView.jsx';
 import AdminMoreView from './components/AdminMoreView.jsx';
 import AdminSidebarDrawer from './components/AdminSidebarDrawer.jsx';
 import AdminNotificationDrawer from './components/AdminNotificationDrawer.jsx';
@@ -14,6 +15,19 @@ export default function AdminApp({ initialRoute = 'dashboard' }) {
   const [activeRoute, setActiveRoute] = useState(initialRoute);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user_info') || '{}');
+    } catch {
+      user = null;
+    }
+    if (!token || !user || (user.role !== 'admin' && user.role !== 'super_admin')) {
+      window.location.href = '/login?role=admin';
+    }
+  }, []);
 
   const handleNavigate = (route) => {
     setActiveRoute(route);
@@ -74,6 +88,10 @@ export default function AdminApp({ initialRoute = 'dashboard' }) {
 
         {activeRoute === 'team' && (
           <AdminTeamView onNavigate={handleNavigate} />
+        )}
+
+        {activeRoute === 'activity' && (
+          <AdminActivityView onNavigate={handleNavigate} />
         )}
 
         {activeRoute === 'more' && (

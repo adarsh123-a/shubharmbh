@@ -5,6 +5,7 @@ import {
   createRM,
   getAllBookings,
   updateBookingStatus,
+  getAdminActivities,
 } from '../controllers/adminController.js';
 import { protect } from '../middleware/authMiddleware.js';
 import { authorizeRoles } from '../middleware/roleMiddleware.js';
@@ -24,6 +25,9 @@ router.post('/team/rm', createRM);
 // Bookings & Registry Management
 router.get('/bookings', getAllBookings);
 router.patch('/bookings/:id/status', updateBookingStatus);
+
+// Activity Tracker (RM and Agent activities only)
+router.get('/activities', getAdminActivities);
 
 export default router;
 

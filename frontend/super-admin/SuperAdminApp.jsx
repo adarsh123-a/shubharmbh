@@ -25,14 +25,9 @@ export default function SuperAdminApp({ initialRoute = 'dashboard' }) {
       user = null;
     }
 
-    if (!user || user.role !== 'super_admin') {
-      window.location.href = '/login';
+    if (!token || !user || user.role !== 'super_admin') {
+      window.location.href = '/login?role=super_admin';
       return;
-    }
-
-    if (!token) {
-      const selfToken = 'sa_session_' + btoa(JSON.stringify({ role: 'super_admin', email: user.email || 'superadmin@shubharambhrealty.com', ts: Date.now() }));
-      localStorage.setItem('auth_token', selfToken);
     }
 
     setIsAuthorized(true);

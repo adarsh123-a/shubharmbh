@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './styles/rm.css';
 import RMHeader from './components/RMHeader.jsx';
 import RMBottomNavbar from './components/RMBottomNavbar.jsx';
@@ -7,6 +7,7 @@ import RMEnquiriesView from './components/RMEnquiriesView.jsx';
 import RMCustomersView from './components/RMCustomersView.jsx';
 import RMVisitsView from './components/RMVisitsView.jsx';
 import RMPropertiesView from './components/RMPropertiesView.jsx';
+import RMActivityView from './components/RMActivityView.jsx';
 import RMMoreView from './components/RMMoreView.jsx';
 import RMSidebarDrawer from './components/RMSidebarDrawer.jsx';
 import RMNotificationDrawer from './components/RMNotificationDrawer.jsx';
@@ -15,6 +16,19 @@ export default function RMApp({ initialRoute = 'dashboard' }) {
   const [activeRoute, setActiveRoute] = useState(initialRoute);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user_info') || '{}');
+    } catch {
+      user = null;
+    }
+    if (!token || !user || (user.role !== 'rm' && user.role !== 'admin' && user.role !== 'super_admin')) {
+      window.location.href = '/login?role=rm';
+    }
+  }, []);
 
   const handleNavigate = (route) => {
     setActiveRoute(route);
@@ -71,6 +85,10 @@ export default function RMApp({ initialRoute = 'dashboard' }) {
 
         {activeRoute === 'customers' && (
           <RMCustomersView onNavigate={handleNavigate} />
+        )}
+
+        {activeRoute === 'activity' && (
+          <RMActivityView onNavigate={handleNavigate} />
         )}
 
         {activeRoute === 'properties' && (

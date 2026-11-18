@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from './components/Header.jsx';
 import CustomerHomeView from './components/CustomerHomeView.jsx';
 import SearchCard from './components/SearchCard.jsx';
@@ -18,6 +18,19 @@ function getCookieRole() {
 export default function CustomerApp() {
   const [activeTab, setActiveTab] = useState('home');
   const [currentRole, setCurrentRole] = useState(() => getCookieRole());
+
+  useEffect(() => {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    let user = null;
+    try {
+      user = JSON.parse(localStorage.getItem('user_info') || '{}');
+    } catch {
+      user = null;
+    }
+    if (!token || !user) {
+      window.location.href = '/login?role=customer';
+    }
+  }, []);
   const [activeCategory, setActiveCategory] = useState('all');
   const [wishlistCount, setWishlistCount] = useState(3);
   const [selectedProperty, setSelectedProperty] = useState(null);

@@ -133,7 +133,11 @@ export const getRMCustomers = async (req, res, next) => {
     const agentIds = agents.map((a) => a._id);
 
     const leads = await CustomerLead.find({
-      $or: [{ assignedRM: rmId }, { assignedAgent: { $in: agentIds } }],
+      $or: [
+        { assignedRM: rmId },
+        ...(agentIds.length > 0 ? [{ assignedAgent: { $in: agentIds } }] : []),
+        { assignedRM: null },
+      ],
     })
       .populate('assignedAgent', 'name phone email')
       .sort({ updatedAt: -1 })
@@ -198,6 +202,20 @@ export const updateVisitStatus = async (req, res, next) => {
     if (remarks !== undefined) visit.remarks = remarks;
 
     await visit.save();
+
+    try {
+      await Activity.create({
+        actor: req.user._id,
+        actorName: req.user.name,
+        actorRole: req.user.role,
+        action: 'VISIT_UPDATED',
+        targetType: 'SITE_VISIT',
+        details: `RM ${req.user.name} updated site visit for "${visit.customerName}" (Status: ${visit.status}).`,
+        ipAddress: req.ip || '',
+      });
+    } catch (actErr) {
+      console.error('Failed to log visit update activity:', actErr.message);
+    }
 
     return res.status(200).json({
       success: true,
@@ -321,6 +339,51 @@ export const updateCustomerLead = async (req, res, next) => {
       success: true,
       message: 'Lead contact status and notes updated successfully.',
       data: lead,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * GET /api/rm/activities
+ * RM only tracks agent activity
+ */
+export const getRMActivities = async (req, res, next) => {
+  try {
+    const rmId = req.user._id;
+    const { page = 1, limit = 30 } = req.query;
+
+    const agents = await User.find({ role: 'agent', assignedRM: rmId }).select('_id');
+    const agentIds = agents.map((a) => a._id);
+
+    // Strictly Agent activities only
+    const query = { actorRole: 'agent' };
+    if (agentIds.length > 0) {
+      query.actor = { $in: agentIds };
+    }
+
+    const skip = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
+    const parsedLimit = Math.min(100, Math.max(1, parseInt(limit, 10)));
+
+    const [activities, total] = await Promise.all([
+      Activity.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parsedLimit)
+        .lean(),
+      Activity.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: activities,
+      pagination: {
+        total,
+        page: parseInt(page, 10),
+        limit: parsedLimit,
+        pages: Math.ceil(total / parsedLimit),
+      },
     });
   } catch (error) {
     next(error);

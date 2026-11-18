@@ -7,19 +7,33 @@ const ROLES = [
   { id: 'agent', label: 'Agent', badge: 'Agent' },
   { id: 'rm', label: 'RM', badge: 'RM' },
   { id: 'admin', label: 'Admin', badge: 'Admin' },
-  { id: 'super_admin', label: 'Super Admin', badge: 'Super Admin' }
+  { id: 'super_admin', label: 'Super Admin', badge: 'Super Admin' },
 ];
 
+function getInitialRole() {
+  if (typeof window !== 'undefined') {
+    const params = new URLSearchParams(window.location.search);
+    const r = (params.get('role') || '').toLowerCase().trim();
+    if (['customer', 'agent', 'rm', 'admin', 'super_admin'].includes(r)) {
+      return r;
+    }
+  }
+  return 'customer';
+}
+
 export default function LoginApp() {
+  const initialRole = getInitialRole();
+  const [selectedRole, setSelectedRole] = useState(initialRole);
   const [mode, setMode] = useState('login'); // 'login' | 'register'
-  const [selectedRole, setSelectedRole] = useState('customer');
 
   // Form states
-  const [identifier, setIdentifier] = useState('');
+  const [identifier, setIdentifier] = useState(
+    initialRole === 'super_admin' ? 'superadmin@shubharambhrealty.com' : ''
+  );
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
+  const [password, setPassword] = useState(initialRole === 'super_admin' ? '12345' : '');
   const [showPassword, setShowPassword] = useState(false);
 
   // Status states
@@ -31,8 +45,13 @@ export default function LoginApp() {
     setSelectedRole(roleId);
     setErrorMessage('');
     setSuccessMessage('');
-    if (roleId === 'super_admin') {
+
+    // Strictly enforce login only for team roles
+    if (roleId !== 'customer') {
       setMode('login');
+    }
+
+    if (roleId === 'super_admin') {
       setIdentifier('superadmin@shubharambhrealty.com');
       setPassword('12345');
     } else {
@@ -44,7 +63,6 @@ export default function LoginApp() {
   };
 
   const navigateByRole = (role) => {
-    // Sync cookie for client-side routing
     document.cookie = `user_role=${role}; path=/; max-age=604800; SameSite=Lax`;
 
     const roleMap = {
@@ -52,7 +70,7 @@ export default function LoginApp() {
       admin: '/admin',
       rm: '/rm',
       agent: '/agent',
-      customer: '/'
+      customer: '/',
     };
 
     const target = roleMap[role] || '/';
@@ -73,7 +91,7 @@ export default function LoginApp() {
       if (response.user) {
         localStorage.setItem('user_info', JSON.stringify(response.user));
       }
-      setSuccessMessage('Login successful! Redirecting...');
+      setSuccessMessage('Login successful! Redirecting to portal...');
       setTimeout(() => {
         navigateByRole(response.user.role);
       }, 700);
@@ -91,17 +109,19 @@ export default function LoginApp() {
     setIsLoading(true);
 
     try {
-      const response = await authService.register({
+      await authService.register({
         name,
         email,
         phone,
         password,
-        role: selectedRole
+        role: 'customer',
       });
-      setSuccessMessage(`Account created as ${response.user.role}! Redirecting...`);
-      setTimeout(() => {
-        navigateByRole(response.user.role);
-      }, 700);
+      setSuccessMessage(
+        'Registration successful! Please sign in with your credentials to access the Customer Portal.'
+      );
+      setMode('login');
+      setIdentifier(phone || email);
+      setPassword('');
     } catch (err) {
       setErrorMessage(err.message || 'Registration failed.');
     } finally {
@@ -135,8 +155,8 @@ export default function LoginApp() {
           ))}
         </div>
 
-        {/* Mode Tabs */}
-        {selectedRole !== 'super_admin' ? (
+        {/* Mode Tabs: Strictly for Customer. Team roles have direct login only */}
+        {selectedRole === 'customer' ? (
           <div className="auth-mode-tabs">
             <button
               type="button"
@@ -147,7 +167,7 @@ export default function LoginApp() {
                 setSuccessMessage('');
               }}
             >
-              Sign In
+              Customer Sign In
             </button>
             <button
               type="button"
@@ -158,13 +178,24 @@ export default function LoginApp() {
                 setSuccessMessage('');
               }}
             >
-              Register
+              New Customer Register
             </button>
           </div>
         ) : (
           <div style={{ textAlign: 'center', marginBottom: '14px' }}>
-            <span style={{ fontSize: '11.5px', fontWeight: '700', color: '#B45309', background: '#FEF3C7', padding: '5px 12px', borderRadius: '8px', display: 'inline-block' }}>
-              👑 Super Admin Direct Login
+            <span
+              style={{
+                fontSize: '11.5px',
+                fontWeight: '700',
+                color: '#1E293B',
+                background: '#F1F5F9',
+                padding: '6px 14px',
+                borderRadius: '8px',
+                display: 'inline-block',
+                border: '1px solid #CBD5E1',
+              }}
+            >
+              🔒 {selectedRole === 'super_admin' ? 'Super Admin' : selectedRole.toUpperCase()} Direct Login (Team Access)
             </span>
           </div>
         )}
@@ -185,7 +216,7 @@ export default function LoginApp() {
               <input
                 type="text"
                 className="form-input"
-                placeholder="e.g. rajesh@example.com or 9876543210"
+                placeholder="e.g. your email or 10-digit phone"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
@@ -218,7 +249,9 @@ export default function LoginApp() {
               className="auth-submit-btn"
               disabled={isLoading}
             >
-              {isLoading ? 'Signing In...' : `Sign In as ${selectedRole.replace('_', ' ').toUpperCase()}`}
+              {isLoading
+                ? 'Signing In...'
+                : `Sign In as ${selectedRole.replace('_', ' ').toUpperCase()}`}
             </button>
           </form>
         ) : (
@@ -230,7 +263,9 @@ export default function LoginApp() {
                 className="form-input"
                 placeholder="Enter full name (letters only)"
                 value={name}
-                onChange={(e) => setName(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''))}
+                onChange={(e) =>
+                  setName(e.target.value.replace(/[^a-zA-Z\s\u0900-\u097F]/g, ''))
+                }
                 required
               />
             </div>
@@ -255,7 +290,9 @@ export default function LoginApp() {
                 placeholder="10-digit mobile number"
                 maxLength={10}
                 value={phone}
-                onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                onChange={(e) =>
+                  setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))
+                }
                 required
               />
             </div>
@@ -286,7 +323,7 @@ export default function LoginApp() {
               className="auth-submit-btn"
               disabled={isLoading}
             >
-              {isLoading ? 'Creating Account...' : `Register as ${selectedRole.replace('_', ' ').toUpperCase()}`}
+              {isLoading ? 'Creating Account...' : 'Register as Customer'}
             </button>
           </form>
         )}
@@ -302,4 +339,3 @@ export default function LoginApp() {
     </div>
   );
 }
-

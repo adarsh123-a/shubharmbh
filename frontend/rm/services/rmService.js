@@ -172,4 +172,20 @@ export const rmService = {
     if (!res.ok) throw new Error(data.message || 'Failed to review booking');
     return data.data;
   },
+
+  // Track Agent Activities (RM strictly tracks agent activities only)
+  async getAgentActivities() {
+    try {
+      const res = await fetch(`${API_BASE}/rm/activities`, {
+        headers: getAuthHeaders(),
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      return Array.isArray(data.data) ? data.data : [];
+    } catch (err) {
+      console.warn('rmService.getAgentActivities fallback:', err.message);
+      return [];
+    }
+  },
 };

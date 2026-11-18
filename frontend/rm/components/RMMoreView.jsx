@@ -261,6 +261,23 @@ export default function RMMoreView({ onNavigate = () => {} }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         <button
           type="button"
+          onClick={() => onNavigate('activity')}
+          style={{
+            backgroundColor: '#D97706',
+            color: '#FFFFFF',
+            border: 'none',
+            borderRadius: '12px',
+            padding: '11px',
+            fontSize: '12px',
+            fontWeight: '700',
+            cursor: 'pointer',
+          }}
+        >
+          ⚡ Track Agent Activity
+        </button>
+
+        <button
+          type="button"
           onClick={() => onNavigate('dashboard')}
           style={{
             backgroundColor: '#0F172A',

@@ -1,5 +1,6 @@
 import User, { ROLES } from '../models/User.js';
 import { sendTokenResponse, clearTokenResponse } from '../utils/token.js';
+import Activity from '../models/Activity.js';
 
 export const register = async (req, res, next) => {
   try {
@@ -111,6 +112,22 @@ export const login = async (req, res, next) => {
         success: false,
         message: 'Invalid credentials.'
       });
+    }
+
+    if (['rm', 'agent', 'admin'].includes(user.role)) {
+      try {
+        await Activity.create({
+          actor: user._id,
+          actorName: user.name,
+          actorRole: user.role,
+          action: 'LOGIN',
+          targetType: 'AUTH',
+          details: `${user.role.toUpperCase()} ${user.name} logged in.`,
+          ipAddress: req.ip || '',
+        });
+      } catch (actErr) {
+        console.error('Failed to log login activity:', actErr.message);
+      }
     }
 
     sendTokenResponse(user, 200, res);

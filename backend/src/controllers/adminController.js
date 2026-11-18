@@ -257,3 +257,44 @@ export const updateBookingStatus = async (req, res, next) => {
   }
 };
 
+/**
+ * GET /api/admin/activities
+ * Track RM and Agent activities only
+ */
+export const getAdminActivities = async (req, res, next) => {
+  try {
+    const { role, page = 1, limit = 30 } = req.query;
+
+    const query = { actorRole: { $in: ['rm', 'agent'] } };
+
+    if (role && ['rm', 'agent'].includes(role.toLowerCase().trim())) {
+      query.actorRole = role.toLowerCase().trim();
+    }
+
+    const skip = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
+    const parsedLimit = Math.min(100, Math.max(1, parseInt(limit, 10)));
+
+    const [activities, total] = await Promise.all([
+      Activity.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parsedLimit)
+        .lean(),
+      Activity.countDocuments(query),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: activities,
+      pagination: {
+        total,
+        page: parseInt(page, 10),
+        limit: parsedLimit,
+        pages: Math.ceil(total / parsedLimit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

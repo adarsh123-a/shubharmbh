@@ -18,28 +18,34 @@ export default function RMCustomersView() {
   const [feedback, setFeedback] = useState('');
   const [savingId, setSavingId] = useState(null);
 
-  // Fetch live leads from backend
-  useEffect(() => {
-    let isMounted = true;
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchLeads = () => {
+    setIsRefreshing(true);
     rmService.getLeads().then((data) => {
-      if (isMounted && Array.isArray(data) && data.length > 0) {
+      if (Array.isArray(data)) {
         const mapped = data.map((item) => ({
           id: item._id,
           customerName: item.name,
           customerPhone: item.phone,
+          customerEmail: item.email || '',
           agentName: item.assignedAgent?.name ? `${item.assignedAgent.name} (Agent)` : 'Assigned Agent',
           agentPhone: item.assignedAgent?.phone || '',
           propertyInterest: item.interestedLand ? `Land Scheme #${item.interestedLand}` : (item.preferredLocation || 'Verified Plots'),
           budget: item.budget ? `Budget: ${item.budget}` : 'Budget Discussion Pending',
           status: item.status || 'new',
           notes: item.notes || '',
+          date: item.createdAt ? new Date(item.createdAt).toLocaleString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '',
         }));
         setCustomers(mapped);
       }
+      setIsRefreshing(false);
     });
-    return () => {
-      isMounted = false;
-    };
+  };
+
+  // Fetch live leads from backend
+  useEffect(() => {
+    fetchLeads();
   }, []);
 
   const handleStatusChange = async (leadId, newStatus) => {
@@ -99,13 +105,32 @@ export default function RMCustomersView() {
 
   return (
     <div className="rm-main-content rm-customers-view">
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
-          Agent Leads & Customer Contact
-        </h2>
-        <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
-          Call customer directly and track status
-        </span>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+        <div>
+          <h2 style={{ fontSize: '18px', fontWeight: '800', color: '#0F172A', margin: 0 }}>
+            Agent Leads & Customer Contact
+          </h2>
+          <span style={{ fontSize: '11px', color: '#64748B', fontWeight: '600' }}>
+            {customers.length} Leads received from Agents • Call customer directly
+          </span>
+        </div>
+        <button
+          type="button"
+          onClick={fetchLeads}
+          disabled={isRefreshing}
+          style={{
+            backgroundColor: '#F8FAFC',
+            border: '1px solid #CBD5E1',
+            borderRadius: '8px',
+            padding: '6px 12px',
+            fontSize: '11px',
+            fontWeight: '700',
+            color: '#334155',
+            cursor: 'pointer',
+          }}
+        >
+          {isRefreshing ? 'Refreshing...' : '🔄 Refresh'}
+        </button>
       </div>
 
       {feedback && (
@@ -258,8 +283,21 @@ export default function RMCustomersView() {
                 🏞️ {cust.propertyInterest}
               </div>
 
-              <div style={{ fontSize: '11px', color: '#64748B', marginBottom: '10px' }}>
-                💰 {cust.budget}
+              {cust.customerEmail && (
+                <div style={{ fontSize: '11px', color: '#475569', marginBottom: '4px' }}>
+                  ✉️ {cust.customerEmail}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '11px', color: '#64748B' }}>
+                  💰 {cust.budget}
+                </span>
+                {cust.date && (
+                  <span style={{ fontSize: '10px', color: '#94A3B8' }}>
+                    📅 {cust.date}
+                  </span>
+                )}
               </div>
 
               {/* RM Discussion Notes */}
